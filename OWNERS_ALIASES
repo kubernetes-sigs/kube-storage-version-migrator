@@ -2,6 +2,8 @@
 
 aliases:
   sig-api-machinery-approvers:
-    -
+    - deads2k
+    - lavalamp
   sig-api-machinery-reviewers:
-    -
+    - deads2k
+    - lavalamp
