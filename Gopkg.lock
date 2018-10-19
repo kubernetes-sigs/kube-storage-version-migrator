@@ -160,18 +160,18 @@
     "idna",
   ]
   pruneopts = "UT"
-  revision = "49bb7cea24b1df9410e1712aa6433dae904ff66a"
+  revision = "04a2e542c03f1d053ab3e4d6e5abcd4b66e2be8e"
 
 [[projects]]
   branch = "master"
-  digest = "1:f5aa274a0377f85735edc7fedfb0811d3cbc20af91633797cb359e29c3272271"
+  digest = "1:56e0fb6e56fa651d9183abd2db5f29d05da203a7c50bf9b331259e5087aca683"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
+  revision = "8e24a49d80f82323e1c4db1b5da3e0f31171a151"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -259,6 +259,22 @@
   version = "kubernetes-1.11.2"
 
 [[projects]]
+  digest = "1:828cfcb0e8dda021b784143c02cb78d42b4495dc51e07e67bbb0a238e9ec6650"
+  name = "k8s.io/apiextensions-apiserver"
+  packages = [
+    "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset",
+    "pkg/client/clientset/clientset/fake",
+    "pkg/client/clientset/clientset/scheme",
+    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake",
+  ]
+  pruneopts = "UT"
+  revision = "408db4a50408e2149acbd657bceb2480c13cb0a4"
+  version = "kubernetes-1.11.2"
+
+[[projects]]
   digest = "1:b7a7277a24d4ca275a5c8d45dcfd90847fbbfdcd6b0bf43f23777a628cd9515c"
   name = "k8s.io/apimachinery"
   packages = [
@@ -309,14 +325,74 @@
   version = "kubernetes-1.11.2"
 
 [[projects]]
-  digest = "1:fd1920f50ea49b67e88de8ea7915fae93f8caefe7ca9d417168173166a109e1d"
+  digest = "1:672df001f6006f1d4b26d566121ee6e365145a02230741d4fa5c77195092bec9"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "discovery/fake",
     "dynamic",
     "dynamic/fake",
+    "kubernetes",
+    "kubernetes/fake",
     "kubernetes/scheme",
+    "kubernetes/typed/admissionregistration/v1alpha1",
+    "kubernetes/typed/admissionregistration/v1alpha1/fake",
+    "kubernetes/typed/admissionregistration/v1beta1",
+    "kubernetes/typed/admissionregistration/v1beta1/fake",
+    "kubernetes/typed/apps/v1",
+    "kubernetes/typed/apps/v1/fake",
+    "kubernetes/typed/apps/v1beta1",
+    "kubernetes/typed/apps/v1beta1/fake",
+    "kubernetes/typed/apps/v1beta2",
+    "kubernetes/typed/apps/v1beta2/fake",
+    "kubernetes/typed/authentication/v1",
+    "kubernetes/typed/authentication/v1/fake",
+    "kubernetes/typed/authentication/v1beta1",
+    "kubernetes/typed/authentication/v1beta1/fake",
+    "kubernetes/typed/authorization/v1",
+    "kubernetes/typed/authorization/v1/fake",
+    "kubernetes/typed/authorization/v1beta1",
+    "kubernetes/typed/authorization/v1beta1/fake",
+    "kubernetes/typed/autoscaling/v1",
+    "kubernetes/typed/autoscaling/v1/fake",
+    "kubernetes/typed/autoscaling/v2beta1",
+    "kubernetes/typed/autoscaling/v2beta1/fake",
+    "kubernetes/typed/batch/v1",
+    "kubernetes/typed/batch/v1/fake",
+    "kubernetes/typed/batch/v1beta1",
+    "kubernetes/typed/batch/v1beta1/fake",
+    "kubernetes/typed/batch/v2alpha1",
+    "kubernetes/typed/batch/v2alpha1/fake",
+    "kubernetes/typed/certificates/v1beta1",
+    "kubernetes/typed/certificates/v1beta1/fake",
+    "kubernetes/typed/core/v1",
+    "kubernetes/typed/core/v1/fake",
+    "kubernetes/typed/events/v1beta1",
+    "kubernetes/typed/events/v1beta1/fake",
+    "kubernetes/typed/extensions/v1beta1",
+    "kubernetes/typed/extensions/v1beta1/fake",
+    "kubernetes/typed/networking/v1",
+    "kubernetes/typed/networking/v1/fake",
+    "kubernetes/typed/policy/v1beta1",
+    "kubernetes/typed/policy/v1beta1/fake",
+    "kubernetes/typed/rbac/v1",
+    "kubernetes/typed/rbac/v1/fake",
+    "kubernetes/typed/rbac/v1alpha1",
+    "kubernetes/typed/rbac/v1alpha1/fake",
+    "kubernetes/typed/rbac/v1beta1",
+    "kubernetes/typed/rbac/v1beta1/fake",
+    "kubernetes/typed/scheduling/v1alpha1",
+    "kubernetes/typed/scheduling/v1alpha1/fake",
+    "kubernetes/typed/scheduling/v1beta1",
+    "kubernetes/typed/scheduling/v1beta1/fake",
+    "kubernetes/typed/settings/v1alpha1",
+    "kubernetes/typed/settings/v1alpha1/fake",
+    "kubernetes/typed/storage/v1",
+    "kubernetes/typed/storage/v1/fake",
+    "kubernetes/typed/storage/v1alpha1",
+    "kubernetes/typed/storage/v1alpha1/fake",
+    "kubernetes/typed/storage/v1beta1",
+    "kubernetes/typed/storage/v1beta1/fake",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
     "pkg/apis/clientauthentication/v1beta1",
@@ -329,6 +405,7 @@
     "tools/clientcmd/api",
     "tools/metrics",
     "tools/pager",
+    "tools/reference",
     "transport",
     "util/buffer",
     "util/cert",
@@ -342,18 +419,41 @@
   version = "kubernetes-1.11.2"
 
 [[projects]]
+  digest = "1:17147f3f83f5bf0c8e02ebc2b423f1a4baefabb84d20d029ed6afe00294748e6"
+  name = "k8s.io/kube-aggregator"
+  packages = [
+    "pkg/apis/apiregistration",
+    "pkg/apis/apiregistration/v1",
+    "pkg/apis/apiregistration/v1beta1",
+    "pkg/client/clientset_generated/clientset",
+    "pkg/client/clientset_generated/clientset/fake",
+    "pkg/client/clientset_generated/clientset/scheme",
+    "pkg/client/clientset_generated/clientset/typed/apiregistration/v1",
+    "pkg/client/clientset_generated/clientset/typed/apiregistration/v1/fake",
+    "pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1",
+    "pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1/fake",
+  ]
+  pruneopts = "UT"
+  revision = "8e086f01c3c3620eca0eb45024cf7eafc0c54ba1"
+  version = "kubernetes-1.11.2"
+
+[[projects]]
   branch = "master"
   digest = "1:a2c842a1e0aed96fd732b535514556323a6f5edfded3b63e5e0ab1bce188aa54"
   name = "k8s.io/kube-openapi"
   packages = ["pkg/util/proto"]
   pruneopts = "UT"
-  revision = "9dfdf9be683f61f82cda12362c44c784e0778b56"
+  revision = "e494cc58111187acad93e64529228a2fc0153e39"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/golang/glog",
     "k8s.io/api/core/v1",
+    "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
+    "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake",
+    "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
@@ -370,11 +470,15 @@
     "k8s.io/client-go/discovery/fake",
     "k8s.io/client-go/dynamic",
     "k8s.io/client-go/dynamic/fake",
+    "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/util/flowcontrol",
+    "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1",
+    "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/fake",
+    "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistration/v1",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
