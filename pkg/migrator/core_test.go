@@ -152,7 +152,7 @@ func TestMigrateList(t *testing.T) {
 		return false, nil, nil
 	})
 
-	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client)
+	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client, &progressTracker{})
 	migratorError := migrator.migrateList(toUnstructuredListOrDie(podList))
 
 	// Validating sent requests.
@@ -201,7 +201,7 @@ func TestMigrateListClusterScoped(t *testing.T) {
 	nodeList := newNodeList(100)
 	client := fake.NewSimpleDynamicClient(scheme.Scheme, &nodeList)
 
-	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("nodes"), client)
+	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("nodes"), client, &progressTracker{})
 	err := migrator.migrateList(toUnstructuredListOrDie(nodeList))
 	if err != nil {
 		t.Errorf("unexpected migration error, %v", err)

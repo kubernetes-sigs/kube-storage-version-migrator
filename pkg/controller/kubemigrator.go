@@ -109,7 +109,8 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	core := migrator.NewMigrator(resource(m), km.dynamic)
+	progressTracker := migrator.NewProgressTracker(km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(m.Namespace), m.Name)
+	core := migrator.NewMigrator(resource(m), km.dynamic, progressTracker)
 	// If the storageVersionMigration object is deleted during Run(), Run()
 	// will return an error when it tries to write the continueToken into the
 	// migration object. Thus, it's not necessary to register a deletion
