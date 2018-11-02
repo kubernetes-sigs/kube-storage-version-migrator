@@ -15,3 +15,7 @@
 .PHONY: test
 test:
 	go test ./...
+
+.PHONY: all
+all:
+	go install github.com/kubernetes-sigs/kube-storage-version-migrator/$(WHAT)
