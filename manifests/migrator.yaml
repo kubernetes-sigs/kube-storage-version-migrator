@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: migrator
+  namespace: kube-storage-migration
+  labels:
+    app: migrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: migrator
+  template:
+    metadata:
+      labels:
+        app: migrator
+    spec:
+      containers:
+      - name: migrator
+        image: REGISTRY/storage-version-migration-migrator:VERSION

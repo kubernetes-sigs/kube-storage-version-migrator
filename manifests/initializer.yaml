@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: initializer
+  namespace: kube-storage-migration
+spec:
+  template:
+    spec:
+      containers:
+      - name: initializer
+        image: REGISTRY/storage-version-migration-initializer:VERSION
+      restartPolicy: Never
+  backoffLimit: 4

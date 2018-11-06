@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-storage-migration
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-migrator
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["get", "list", "update"]
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-crd-creator
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create", "delete", "get"]
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-initializer
+  namespace: kube-storage-migration
+rules:
+- apiGroups: ["migration.k8s.io"]
+  resources: ["storageversionmigrations"]
+  verbs: ["create"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-migrator
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-storage-migration
+roleRef:
+  kind: ClusterRole
+  name: storage-version-migration-migrator
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-crd-creator
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-storage-migration
+roleRef:
+  kind: ClusterRole
+  name: storage-version-migration-crd-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-initializer
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-storage-migration
+roleRef:
+  kind: Role
+  name: storage-version-migration-initializer
+  apiGroup: rbac.authorization.k8s.io
