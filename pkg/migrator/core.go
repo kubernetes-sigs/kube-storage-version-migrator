@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/dynamic"
 )
 
@@ -38,34 +39,19 @@ const (
 	defaultConcurrency = 1
 )
 
-type progressTracker interface {
-	save(continueToken string) error
-	load() (continueToken string, err error)
-}
-
-type dummyProgress struct{}
-
-func (d *dummyProgress) load() (string, error) {
-	return "", nil
-}
-
-func (d *dummyProgress) save(continueToken string) error {
-	return nil
-}
-
 type migrator struct {
 	resource    schema.GroupVersionResource
 	client      dynamic.Interface
-	progress    progressTracker
+	progress    *progressTracker
 	concurrency int
 }
 
 // NewMigrator creates a migrator that can migrate a single resource type.
-func NewMigrator(resource schema.GroupVersionResource, client dynamic.Interface) *migrator {
+func NewMigrator(resource schema.GroupVersionResource, client dynamic.Interface, progress *progressTracker) *migrator {
 	return &migrator{
 		resource:    resource,
 		client:      client,
-		progress:    &dummyProgress{},
+		progress:    progress,
 		concurrency: defaultConcurrency,
 	}
 }
@@ -118,7 +104,10 @@ func (m *migrator) Run() error {
 				return err
 			}
 			continueToken = token
-			m.progress.save(continueToken)
+			err = m.progress.save(continueToken)
+			if err != nil {
+				utilruntime.HandleError(err)
+			}
 			continue
 		}
 		if err := m.migrateList(list); err != nil {
@@ -132,7 +121,10 @@ func (m *migrator) Run() error {
 			return nil
 		}
 		continueToken = token
-		m.progress.save(continueToken)
+		err = m.progress.save(continueToken)
+		if err != nil {
+			utilruntime.HandleError(err)
+		}
 	}
 }
 
