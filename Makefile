@@ -14,6 +14,7 @@
 
 REGISTRY ?= gcr.io/google-containers
 VERSION ?= v0.1
+DELETE ?= "gcloud container images delete"
 
 .PHONY: test
 test:
@@ -47,6 +48,11 @@ local-manifests:
 push-all: all-containers
 	docker push $(REGISTRY)/storage-version-migration-initializer:$(VERSION)
 	docker push $(REGISTRY)/storage-version-migration-migrator:$(VERSION)
+
+.PHONY: delete-all-images
+delete-all-images:
+	eval "$(DELETE) $(REGISTRY)/storage-version-migration-initializer:$(VERSION)"
+	eval "$(DELETE) $(REGISTRY)/storage-version-migration-migrator:$(VERSION)"
 
 .PHONY: clean
 clean:
