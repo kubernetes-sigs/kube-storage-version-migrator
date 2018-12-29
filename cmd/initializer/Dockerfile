@@ -15,4 +15,4 @@
 FROM alpine:3.6
 
 ADD initializer /initializer
-ENTRYPOINT ["/initializer"]
+ENTRYPOINT ["/initializer", "--alsologtostderr", "--v=2"]

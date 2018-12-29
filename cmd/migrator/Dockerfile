@@ -15,4 +15,4 @@
 FROM alpine:3.6
 
 ADD migrator /migrator
-ENTRYPOINT ["/migrator"]
+ENTRYPOINT ["/migrator", "--alsologtostderr", "--v=2"]
