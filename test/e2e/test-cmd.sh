@@ -22,19 +22,7 @@ MIGRATORROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"/../.
 REGISTRY=""
 VERSION=""
 
-# Retry 10 times with 10s interval to wait for the apiserver to come back.
-function wait-for-apiserver()
-{
-  for count in {0..9}; do
-    kubectl version && rc=$? || rc=$?
-    if [ ${rc} -eq 0 ]; then
-      return 0
-    else
-      sleep 10
-    fi
-  done
-  return 1
-}
+TESTFILE="v1beta2-controllerrevision.proto"
 
 function wait-for-migration()
 {
@@ -82,6 +70,25 @@ function wait-for-migration()
   return 1
 } 
 
+# $1 should be the etcd container's hash.
+# $2 should be the expected controllerrevisions's storage version.
+verify-version()
+{
+  version=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+    "docker exec $1 /bin/sh -c \"ETCDCTL_API=3 etcdctl get /registry/controllerrevisions/default/sample\" | grep -a apps")
+  # Remove the trailing non-printable character. The data is encoded in proto, so
+  # it has non-printable characters.
+  version=$(tr -dc '[[:print:]]' <<< "${version}")
+  echo "${version}"
+  if [[ "${version}" = *"$2"* ]]; then
+    echo "Version check passed, expected $2, got ${version}"
+    return 0
+  else
+    echo "Version check failed, expected $2, got ${version}!"
+    return 1
+  fi
+}
+
 cleanup() {
   if [[ -z "${REGISTRY}" ]]; then
     return
@@ -104,34 +111,37 @@ kubectl version
 # This is to enable docker push. Running it here to fail early.
 gcloud auth configure-docker
 
-# TODO: create more objects.
-# STEP 1: create an object
+# TODO: Test more types of resources.
 
-# We use controller revision as the test subject because it has multiple
-# versions, and no controller is going to write to it.
-cat <<EOF | kubectl create --namespace=default -f -
-apiVersion: apps/v1
-kind: ControllerRevision
-metadata:
-  name: sample
-data:
-  Raw: a
-revision: 1
-EOF
+# STEP 1: create an object encoded in a non-default storage version. We cannot
+# create the object via the apiserver, because apiserver always encode the
+# object to the default storage version before storing in etcd.
 
+# Copy the pre-made proto file of the object to the master machine.
+user_name=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command "whoami")
+gcloud compute scp "${MIGRATORROOT}/test/e2e/${TESTFILE}" "${user_name}@${CLUSTER_NAME}-master:~/" --project "${PROJECT}" --zone "${KUBE_GCE_ZONE}"
+
+# Get the etcd container ID.
+result=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+  "docker ps")
+etcd_container=$(echo "${result}" | grep "etcd-server-${CLUSTER_NAME}-master" | grep -v pause | cut -d ' ' -f 1)
+
+# Copy the proto file to the etcd container
+gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+  "docker cp ${TESTFILE} ${etcd_container}:/"
+
+# Create the object via etcdctl
+gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+  "docker exec ${etcd_container} /bin/sh -c \"cat /${TESTFILE} | ETCDCTL_API=3 etcdctl put /registry/controllerrevisions/default/sample\""
+
+#TODO: remove
+# Verify that the ControllerRevision is encoded as apps/v1beta2.
+verify-version "${etcd_container}" "apps/v1beta2"
+
+# Validate that the creation via etcdctl is successful
 kubectl get controllerrevisions sample --namespace=default
 
-# STEP 2: change the apiserver configuration of --storage-versions.
-
-# Change the apiserver manifest to change the storage version.
-# TODO: Set the storage version based on the version of the apiserver. There is
-# no guarantee that apps/v1beta2 is always supported.
-gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-"sudo sed -i \"s/--v=/--storage-versions=apps\/v1beta2 --v=/\" /etc/kubernetes/manifests/kube-apiserver.manifest"
-
-wait-for-apiserver 
-
-# STEP 3: build and deploy the migrator, wait for its completion.
+# STEP 2: build and deploy the migrator, wait for its completion.
 
 pushd "${MIGRATORROOT}"
 export REGISTRY="gcr.io/${PROJECT}"
@@ -151,24 +161,8 @@ popd
 
 wait-for-migration
 
-# STEP 4: verify the object has been migrated.
+# STEP 3: verify the object has been migrated.
 
-# Verify the ControllerRevision is encoded as apps/v1beta2 in etcd.
-result=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-  "docker ps")
-etcd_container=$(echo "${result}" | grep "etcd-server-${CLUSTER_NAME}-master" | grep -v pause | cut -d ' ' -f 1)
-
-version=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-  "docker exec ${etcd_container} /bin/sh -c \"ETCDCTL_API=3 etcdctl get /registry/controllerrevisions/default/sample\" | grep apps")
-# Remove the trailing non-printable character. The data is encoded in proto, so
-# it has non-printable characters.
-version=$(tr -dc '[[:print:]]' <<< "${version}")
-echo "${version}"
-
-if [[ "${version}" = *"apps/v1beta2"* ]]; then
-  echo "Succeeded!"
-  exit 0
-else
-  echo "Failed, expected apps/v1beta2, got ${version}!"
-  exit 1
-fi
+# Verify that the ControllerRevision is encoded as apps/v1, the default storage
+# version, in etcd.
+verify-version "${etcd_container}" "apps/v1"
