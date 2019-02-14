@@ -28,6 +28,10 @@ type FakeMigrationV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeMigrationV1alpha1) StorageStates() v1alpha1.StorageStateInterface {
+	return &FakeStorageStates{c}
+}
+
 func (c *FakeMigrationV1alpha1) StorageVersionMigrations(namespace string) v1alpha1.StorageVersionMigrationInterface {
 	return &FakeStorageVersionMigrations{c, namespace}
 }

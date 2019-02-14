@@ -18,6 +18,10 @@ limitations under the License.
 
 package v1alpha1
 
+// StorageStateListerExpansion allows custom methods to be added to
+// StorageStateLister.
+type StorageStateListerExpansion interface{}
+
 // StorageVersionMigrationListerExpansion allows custom methods to be added to
 // StorageVersionMigrationLister.
 type StorageVersionMigrationListerExpansion interface{}

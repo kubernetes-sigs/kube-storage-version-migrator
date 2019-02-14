@@ -27,12 +27,17 @@ import (
 
 type MigrationV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	StorageStatesGetter
 	StorageVersionMigrationsGetter
 }
 
 // MigrationV1alpha1Client is used to interact with features provided by the migration.k8s.io group.
 type MigrationV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *MigrationV1alpha1Client) StorageStates() StorageStateInterface {
+	return newStorageStates(c)
 }
 
 func (c *MigrationV1alpha1Client) StorageVersionMigrations(namespace string) StorageVersionMigrationInterface {
