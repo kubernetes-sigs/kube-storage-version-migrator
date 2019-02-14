@@ -60,6 +60,8 @@ type StorageVersionMigrationSpec struct {
 	// migration.
 	// +optional
 	ContinueToken string `json:"continueToken,omitempty"`
+	// TODO: consider recording the storage version hash when the migration
+	// is created. It can avoid races.
 }
 
 type MigrationConditionType string
@@ -108,4 +110,77 @@ type StorageVersionMigrationList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// Items is the list of StorageVersionMigration
 	Items []StorageVersionMigration `json:"items"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient:nonNamespaced
+
+// The state of the storage of a specific resource.
+type StorageState struct {
+	metav1.TypeMeta `json:",inline"`
+	// The name must be "<.spec.resource.resouce>.<.spec.resource.group>".
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// Specification of the storage state.
+	// +optional
+	Spec StorageStateSpec `json:"spec,omitempty"`
+	// Status of the storage state.
+	// +optional
+	Status StorageStateStatus `json:"status,omitempty"`
+}
+
+// The names of the group and the resource.
+type GroupResource struct {
+	// The name of the group.
+	Group string
+	// The name of the resource.
+	Resource string
+}
+
+// Specification of the storage state.
+type StorageStateSpec struct {
+	// The resource this storageState is about.
+	Resource GroupResource `json:"resource,omitempty"`
+}
+
+// Unknown is a valid value in persistedStorageVersionHashes.
+const Unknown = "Unknown"
+
+// Status of the storage state.
+type StorageStateStatus struct {
+	// The hash values of storage versions that persisted instances of
+	// spec.resource might still be encoded in.
+	// "Unknown" is a valid value in the list, and is the default value.
+	// It is not safe to upgrade or downgrade to an apiserver binary that does not
+	// support all versions listed in this field, or if "Unknown" is listed.
+	// Once the storage version migration for this resource has completed, the
+	// value of this field is refined to only contain the
+	// currentStorageVersionHash.
+	// Once the apiserver has changed the storage version, the new storage version
+	// is appended to the list.
+	// +optional
+	PersistedStorageVersionHashes []string `json:"persistedStorageVersionHashes,omitempty"`
+	// The hash value of the current storage version, as shown in the discovery
+	// document served by the API server.
+	// Storage Version is the version to which objects are converted to
+	// before persisted.
+	// +optional
+	CurrentStorageVersionHash string `json:"currentStorageVersionHash,omitempty"`
+	// LastHeartbeatTime is the last time the storage migration triggering
+	// controller checks the storage version hash of this resource in the
+	// discovery document and updates this field.
+	// +optional
+	LastHeartbeatTime metav1.Time `json:"lastHeartbeatTime,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// StorageStateList is a collection of storage state.
+type StorageStateList struct {
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty"`
+	// Items is the list of StorageState
+	Items []StorageState `json:"items"`
 }
