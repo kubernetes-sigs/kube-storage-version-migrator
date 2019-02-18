@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func hasCondition(m *migrationv1alpha1.StorageVersionMigration, conditionType migrationv1alpha1.MigrationConditionType) bool {
+func HasCondition(m *migrationv1alpha1.StorageVersionMigration, conditionType migrationv1alpha1.MigrationConditionType) bool {
 	return indexOfCondition(m, conditionType) != -1
 }
 

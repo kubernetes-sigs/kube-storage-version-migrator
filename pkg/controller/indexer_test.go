@@ -61,21 +61,21 @@ func TestStatusIndexedInformer(t *testing.T) {
 	go informer.Run(stopCh)
 
 	cache.WaitForCacheSync(stopCh, informer.HasSynced)
-	ret, err := informer.GetIndexer().ByIndex(statusIndex, statusRunning)
+	ret, err := informer.GetIndexer().ByIndex(StatusIndex, StatusRunning)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if e, a := running, ret[0]; !reflect.DeepEqual(e, a) {
 		t.Errorf("expected %v, got %v", e, a)
 	}
-	ret, err = informer.GetIndexer().ByIndex(statusIndex, statusPending)
+	ret, err = informer.GetIndexer().ByIndex(StatusIndex, StatusPending)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if e, a := pending, ret[0]; !reflect.DeepEqual(e, a) {
 		t.Errorf("expected %v, got %v", e, a)
 	}
-	ret, err = informer.GetIndexer().ByIndex(statusIndex, statusCompleted)
+	ret, err = informer.GetIndexer().ByIndex(StatusIndex, StatusCompleted)
 	if err != nil {
 		t.Fatal(err)
 	}

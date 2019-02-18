@@ -28,10 +28,10 @@ import (
 )
 
 const (
-	statusIndex     = "Status"
-	statusRunning   = "Running"
-	statusPending   = "Pending"
-	statusCompleted = "Completed"
+	StatusIndex     = "Status"
+	StatusRunning   = "Running"
+	StatusPending   = "Pending"
+	StatusCompleted = "Completed"
 )
 
 // migrationStatusIndexFunc categorize StorageVersionMigrations based on their conditions.
@@ -40,15 +40,15 @@ func migrationStatusIndexFunc(obj interface{}) ([]string, error) {
 	if !ok {
 		return []string{}, fmt.Errorf("expected StroageVersionMigration, got %#v", reflect.TypeOf(obj))
 	}
-	if hasCondition(m, migration_v1alpha1.MigrationSucceeded) || hasCondition(m, migration_v1alpha1.MigrationFailed) {
-		return []string{statusCompleted}, nil
+	if HasCondition(m, migration_v1alpha1.MigrationSucceeded) || HasCondition(m, migration_v1alpha1.MigrationFailed) {
+		return []string{StatusCompleted}, nil
 	}
-	if hasCondition(m, migration_v1alpha1.MigrationRunning) {
-		return []string{statusRunning}, nil
+	if HasCondition(m, migration_v1alpha1.MigrationRunning) {
+		return []string{StatusRunning}, nil
 	}
-	return []string{statusPending}, nil
+	return []string{StatusPending}, nil
 }
 
-func newStatusIndexedInformer(c migrationclient.Interface) cache.SharedIndexInformer {
-	return migrationinformer.NewStorageVersionMigrationInformer(c, metav1.NamespaceAll, 0, cache.Indexers{statusIndex: migrationStatusIndexFunc})
+func NewStatusIndexedInformer(c migrationclient.Interface) cache.SharedIndexInformer {
+	return migrationinformer.NewStorageVersionMigrationInformer(c, metav1.NamespaceAll, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc})
 }
