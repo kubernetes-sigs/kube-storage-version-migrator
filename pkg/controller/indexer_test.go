@@ -44,6 +44,17 @@ func newMigration(name string, conditionType migrationv1alpha1.MigrationConditio
 	}
 }
 
+func newMigrationForResource(name string, r migrationv1alpha1.GroupVersionResource) *migrationv1alpha1.StorageVersionMigration {
+	return &migrationv1alpha1.StorageVersionMigration{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: migrationv1alpha1.StorageVersionMigrationSpec{
+			Resource: r,
+		},
+	}
+}
+
 func TestStatusIndexedInformer(t *testing.T) {
 	running := newMigration("Running", migrationv1alpha1.MigrationRunning)
 	succeeded := newMigration("Succeeded", migrationv1alpha1.MigrationSucceeded)
@@ -54,7 +65,7 @@ func TestStatusIndexedInformer(t *testing.T) {
 		},
 	}
 	client := fake.NewSimpleClientset(running, succeeded, failed, pending)
-	informer := newStatusIndexedInformer(client)
+	informer := NewStatusIndexedInformer(client)
 
 	stopCh := make(chan struct{})
 	defer close(stopCh)
@@ -84,5 +95,58 @@ func TestStatusIndexedInformer(t *testing.T) {
 	case reflect.DeepEqual(ret[1], failed) && reflect.DeepEqual(ret[0], succeeded):
 	default:
 		t.Errorf("expected one successful, one failed, got %v", ret)
+	}
+}
+
+func TestResourceIndexedInformer(t *testing.T) {
+	podsv1R := migrationv1alpha1.GroupVersionResource{Group: "core", Version: "v1", Resource: "pods"}
+	podsv2R := migrationv1alpha1.GroupVersionResource{Group: "core", Version: "v2", Resource: "pods"}
+	nodesv1R := migrationv1alpha1.GroupVersionResource{Group: "core", Version: "v1", Resource: "nodes"}
+	jobsv1R := migrationv1alpha1.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
+	podsv1 := newMigrationForResource("podsv1", podsv1R)
+	podsv2 := newMigrationForResource("podsv2", podsv2R)
+	nodesv1 := newMigrationForResource("nodesv1", nodesv1R)
+	jobsv1 := newMigrationForResource("jobsv1", jobsv1R)
+
+	client := fake.NewSimpleClientset(podsv1, podsv2, nodesv1, jobsv1)
+	informer := NewStatusAndResourceIndexedInformer(client)
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go informer.Run(stopCh)
+
+	cache.WaitForCacheSync(stopCh, informer.HasSynced)
+	ret, err := informer.GetIndexer().ByIndex(ResourceIndex, ToIndex(podsv1R))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ret) != 2 {
+		t.Fatalf("expected two objects, got %v", ret)
+	}
+	switch {
+	case reflect.DeepEqual(ret[0], podsv1) && reflect.DeepEqual(ret[1], podsv2):
+	case reflect.DeepEqual(ret[1], podsv2) && reflect.DeepEqual(ret[0], podsv1):
+	default:
+		t.Errorf("expected either [podsv1, podsv2] or [podsv2, podsv1], got %v", ret)
+	}
+	ret, err = informer.GetIndexer().ByIndex(ResourceIndex, ToIndex(nodesv1R))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ret) != 1 {
+		t.Fatalf("expected only one, got %v", ret)
+	}
+	if e, a := nodesv1, ret[0]; !reflect.DeepEqual(e, a) {
+		t.Errorf("expected %v, got %v", e, a)
+	}
+	ret, err = informer.GetIndexer().ByIndex(ResourceIndex, ToIndex(jobsv1R))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ret) != 1 {
+		t.Fatalf("expected only one, got %v", ret)
+	}
+	if e, a := jobsv1, ret[0]; !reflect.DeepEqual(e, a) {
+		t.Errorf("expected %v, got %v", e, a)
 	}
 }
