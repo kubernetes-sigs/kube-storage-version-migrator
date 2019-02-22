@@ -2,6 +2,11 @@
 
 This tool migrates stored data in etcd to the latest storage version.
 
+Related KEPs:
+
+* [Prototype design](https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/0030-storage-migration.md)
+* [Automated migration](https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/storage-migration-auto-trigger.md)
+
 ## Community, discussion, contribution, and support
 
 Learn how to engage with the Kubernetes community on the [community page](http://kubernetes.io/community/).
