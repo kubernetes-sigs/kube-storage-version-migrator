@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	migration_v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset"
 	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/informer/internalinterfaces"
 	v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/lister/migration/v1alpha1"
@@ -69,7 +69,7 @@ func NewFilteredStorageStateInformer(client clientset.Interface, resyncPeriod ti
 				return client.MigrationV1alpha1().StorageStates().Watch(options)
 			},
 		},
-		&migration_v1alpha1.StorageState{},
+		&migrationv1alpha1.StorageState{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,7 +80,7 @@ func (f *storageStateInformer) defaultInformer(client clientset.Interface, resyn
 }
 
 func (f *storageStateInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&migration_v1alpha1.StorageState{}, f.defaultInformer)
+	return f.factory.InformerFor(&migrationv1alpha1.StorageState{}, f.defaultInformer)
 }
 
 func (f *storageStateInformer) Lister() v1alpha1.StorageStateLister {
