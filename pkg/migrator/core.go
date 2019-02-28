@@ -69,7 +69,7 @@ func (m *migrator) put(namespace, name string, obj *unstructured.Unstructured) (
 	return m.client.
 		Resource(m.resource).
 		Namespace(namespace).
-		Update(obj)
+		Update(obj, metav1.UpdateOptions{})
 }
 
 func (m *migrator) list(options metav1.ListOptions) (*unstructured.UnstructuredList, error) {

@@ -123,7 +123,7 @@ func (c *FakeStorageStates) DeleteCollection(options *v1.DeleteOptions, listOpti
 // Patch applies the patch and returns the patched storageState.
 func (c *FakeStorageStates) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.StorageState, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(storagestatesResource, name, data, subresources...), &v1alpha1.StorageState{})
+		Invokes(testing.NewRootPatchSubresourceAction(storagestatesResource, name, pt, data, subresources...), &v1alpha1.StorageState{})
 	if obj == nil {
 		return nil, err
 	}

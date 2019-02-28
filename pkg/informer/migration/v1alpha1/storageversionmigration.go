@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	migration_v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset"
 	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/informer/internalinterfaces"
 	v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/lister/migration/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredStorageVersionMigrationInformer(client clientset.Interface, name
 				return client.MigrationV1alpha1().StorageVersionMigrations(namespace).Watch(options)
 			},
 		},
-		&migration_v1alpha1.StorageVersionMigration{},
+		&migrationv1alpha1.StorageVersionMigration{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *storageVersionMigrationInformer) defaultInformer(client clientset.Inter
 }
 
 func (f *storageVersionMigrationInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&migration_v1alpha1.StorageVersionMigration{}, f.defaultInformer)
+	return f.factory.InformerFor(&migrationv1alpha1.StorageVersionMigration{}, f.defaultInformer)
 }
 
 func (f *storageVersionMigrationInformer) Lister() v1alpha1.StorageVersionMigrationLister {

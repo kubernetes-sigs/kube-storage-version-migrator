@@ -131,7 +131,7 @@ func (c *FakeStorageVersionMigrations) DeleteCollection(options *v1.DeleteOption
 // Patch applies the patch and returns the patched storageVersionMigration.
 func (c *FakeStorageVersionMigrations) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.StorageVersionMigration, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(storageversionmigrationsResource, c.ns, name, data, subresources...), &v1alpha1.StorageVersionMigration{})
+		Invokes(testing.NewPatchSubresourceAction(storageversionmigrationsResource, c.ns, name, pt, data, subresources...), &v1alpha1.StorageVersionMigration{})
 
 	if obj == nil {
 		return nil, err
