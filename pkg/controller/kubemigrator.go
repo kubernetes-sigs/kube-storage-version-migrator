@@ -44,7 +44,7 @@ type KubeMigrator struct {
 
 // NewKubeMigrator creates KubeMigrator.
 func NewKubeMigrator(dynamic dynamic.Interface, migrationClient migrationclient.Interface) *KubeMigrator {
-	informer := newStatusIndexedInformer(migrationClient)
+	informer := NewStatusIndexedInformer(migrationClient)
 	return &KubeMigrator{
 		dynamic:           dynamic,
 		migrationClient:   migrationClient,
@@ -68,7 +68,7 @@ func (km *KubeMigrator) process() {
 	// storageVersionMigration.
 
 	// The already "Running" storageVersionMigrations are the priority.
-	runnings, err := km.migrationInformer.GetIndexer().ByIndex(statusIndex, statusRunning)
+	runnings, err := km.migrationInformer.GetIndexer().ByIndex(StatusIndex, StatusRunning)
 	if err != nil {
 		utilruntime.HandleError(err)
 		return
@@ -79,7 +79,7 @@ func (km *KubeMigrator) process() {
 	}
 
 	// The next priority is the pending storageVersionMigrations.
-	pendings, err := km.migrationInformer.GetIndexer().ByIndex(statusIndex, statusPending)
+	pendings, err := km.migrationInformer.GetIndexer().ByIndex(StatusIndex, StatusPending)
 	if err != nil {
 		utilruntime.HandleError(err)
 		return
@@ -93,7 +93,7 @@ func (km *KubeMigrator) process() {
 func (km *KubeMigrator) processOne(obj interface{}) error {
 	m, ok := obj.(*migrationv1alpha1.StorageVersionMigration)
 	if !ok {
-		return fmt.Errorf("expected StroageVersionMigration, got %#v", reflect.TypeOf(obj))
+		return fmt.Errorf("expected StorageVersionMigration, got %#v", reflect.TypeOf(obj))
 	}
 	// get the fresh object from the apiserver to make sure the object
 	// still exists, and the object is not completed.
@@ -101,7 +101,7 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	if hasCondition(m, migrationv1alpha1.MigrationSucceeded) || hasCondition(m, migrationv1alpha1.MigrationFailed) {
+	if HasCondition(m, migrationv1alpha1.MigrationSucceeded) || HasCondition(m, migrationv1alpha1.MigrationFailed) {
 		glog.V(2).Infof("The migration has already completed for %#v", m)
 		return nil
 	}

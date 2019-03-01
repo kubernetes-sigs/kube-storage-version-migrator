@@ -28,27 +28,46 @@ import (
 )
 
 const (
-	statusIndex     = "Status"
-	statusRunning   = "Running"
-	statusPending   = "Pending"
-	statusCompleted = "Completed"
+	StatusIndex     = "Status"
+	StatusRunning   = "Running"
+	StatusPending   = "Pending"
+	StatusCompleted = "Completed"
+
+	ResourceIndex = "Resource"
 )
 
-// migrationStatusIndexFunc categorize StorageVersionMigrations based on their conditions.
+// migrationStatusIndexFunc categorizes StorageVersionMigrations based on their conditions.
 func migrationStatusIndexFunc(obj interface{}) ([]string, error) {
 	m, ok := obj.(*migration_v1alpha1.StorageVersionMigration)
 	if !ok {
 		return []string{}, fmt.Errorf("expected StroageVersionMigration, got %#v", reflect.TypeOf(obj))
 	}
-	if hasCondition(m, migration_v1alpha1.MigrationSucceeded) || hasCondition(m, migration_v1alpha1.MigrationFailed) {
-		return []string{statusCompleted}, nil
+	if HasCondition(m, migration_v1alpha1.MigrationSucceeded) || HasCondition(m, migration_v1alpha1.MigrationFailed) {
+		return []string{StatusCompleted}, nil
 	}
-	if hasCondition(m, migration_v1alpha1.MigrationRunning) {
-		return []string{statusRunning}, nil
+	if HasCondition(m, migration_v1alpha1.MigrationRunning) {
+		return []string{StatusRunning}, nil
 	}
-	return []string{statusPending}, nil
+	return []string{StatusPending}, nil
 }
 
-func newStatusIndexedInformer(c migrationclient.Interface) cache.SharedIndexInformer {
-	return migrationinformer.NewStorageVersionMigrationInformer(c, metav1.NamespaceAll, 0, cache.Indexers{statusIndex: migrationStatusIndexFunc})
+func NewStatusIndexedInformer(c migrationclient.Interface) cache.SharedIndexInformer {
+	return migrationinformer.NewStorageVersionMigrationInformer(c, metav1.NamespaceAll, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc})
+}
+
+func ToIndex(r migration_v1alpha1.GroupVersionResource) string {
+	return r.Resource + "." + r.Group
+}
+
+// migrationResourceIndexFunc categorizes StorageVersionMigrations based on the <.spec.resource.resource>.<.spec.resource.group>.
+func migrationResourceIndexFunc(obj interface{}) ([]string, error) {
+	m, ok := obj.(*migration_v1alpha1.StorageVersionMigration)
+	if !ok {
+		return []string{}, fmt.Errorf("expected StroageVersionMigration, got %#v", reflect.TypeOf(obj))
+	}
+	return []string{ToIndex(m.Spec.Resource)}, nil
+}
+
+func NewStatusAndResourceIndexedInformer(c migrationclient.Interface) cache.SharedIndexInformer {
+	return migrationinformer.NewStorageVersionMigrationInformer(c, metav1.NamespaceAll, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc, ResourceIndex: migrationResourceIndexFunc})
 }
