@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ func freshStorageState() *v1alpha1.StorageState {
 		},
 		Status: v1alpha1.StorageStateStatus{
 			CurrentStorageVersionHash:     "newhash",
-			PersistedStorageVersionHashes: []string{v1alpha1.Unknown, "newhash"},
+			PersistedStorageVersionHashes: []string{"newhash"},
 			LastHeartbeatTime:             metav1.Time{metav1.Now().Add(-1 * discoveryPeriod)},
 		},
 	}
@@ -263,7 +263,7 @@ func TestProcessDiscoveryResourceStorageVersionChanged(t *testing.T) {
 }
 
 func TestProcessDiscoveryResourceNoChange(t *testing.T) {
-	client := fake.NewSimpleClientset(newMigrationList(), freshStorageStateWithOldHash())
+	client := fake.NewSimpleClientset(newMigrationList(), freshStorageState())
 	trigger := NewMigrationTrigger(client)
 	stopCh := make(chan struct{})
 	defer close(stopCh)
@@ -277,6 +277,5 @@ func TestProcessDiscoveryResourceNoChange(t *testing.T) {
 	trigger.processDiscoveryResource(discoveredResource)
 
 	actions := client.Actions()
-	verifyCleanupAndLaunch(t, actions[3:7])
-	verifyStorageStateUpdate(t, actions[8], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{"oldhash", "newhash"})
+	verifyStorageStateUpdate(t, actions[4], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{"newhash"})
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ func (mt *MigrationTrigger) markStorageStateSucceeded(resource migrationv1alpha1
 			return true, nil
 		}
 		ss.Status.PersistedStorageVersionHashes = []string{ss.Status.CurrentStorageVersionHash}
-		_, err = mt.client.MigrationV1alpha1().StorageStates().Update(ss)
+		_, err = mt.client.MigrationV1alpha1().StorageStates().UpdateStatus(ss)
 		if err != nil {
 			utilruntime.HandleError(err)
 			return false, nil
@@ -78,7 +78,10 @@ func (mt *MigrationTrigger) processMigration(m *migrationv1alpha1.StorageVersion
 	case controller.HasCondition(m, migrationv1alpha1.MigrationSucceeded):
 		return mt.markStorageStateSucceeded(m.Spec.Resource)
 	case controller.HasCondition(m, migrationv1alpha1.MigrationFailed):
-		return mt.launchMigration(m.Spec.Resource)
+		// The migration controller should have already tried its best
+		// to complete the migration before marking the migration as
+		// failed. There is nothing the triggering controller can do.
+		return nil
 	default:
 		return nil
 	}
