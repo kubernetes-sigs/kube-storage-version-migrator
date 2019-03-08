@@ -17,7 +17,7 @@ limitations under the License.
 package migrator
 
 import (
-	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset/typed/migration/v1alpha1"
+	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 )

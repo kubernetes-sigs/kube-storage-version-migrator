@@ -20,7 +20,7 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset/scheme"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )

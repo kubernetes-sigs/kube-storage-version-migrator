@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset"
-	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/informer/internalinterfaces"
-	migration "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/informer/migration"
+	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
+	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/internalinterfaces"
+	migration "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/migration"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

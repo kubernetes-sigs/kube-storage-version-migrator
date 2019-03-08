@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset"
-	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset/typed/migration/v1alpha1"
-	fakemigrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset/typed/migration/v1alpha1/fake"
+	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
+	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1"
+	fakemigrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

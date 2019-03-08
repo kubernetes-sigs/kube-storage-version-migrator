@@ -44,24 +44,24 @@ GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/deepcopy-gen
 popd
 
 ${WORK_DIR}/go/bin/client-gen \
-  --output-package "${THIS_REPO}/pkg/" \
+  --output-package "${THIS_REPO}/pkg/clients" \
   --clientset-name="clientset" \
   --input-base="${THIS_REPO}" \
   --input="pkg/apis/migration/v1alpha1" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
 
 ${WORK_DIR}/go/bin/lister-gen \
-  --output-package "${THIS_REPO}/pkg/lister" \
+  --output-package "${THIS_REPO}/pkg/clients/lister" \
   --input-dirs="${API_PKG}" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
 
 ${WORK_DIR}/go/bin/informer-gen \
-  --output-package "${THIS_REPO}/pkg/informer" \
+  --output-package "${THIS_REPO}/pkg/clients/informer" \
   --input-dirs="${API_PKG}" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt" \
   --single-directory\
-  --versioned-clientset-package "${THIS_REPO}/pkg/clientset" \
-  --listers-package "${THIS_REPO}/pkg/lister"
+  --versioned-clientset-package "${THIS_REPO}/pkg/clients/clientset" \
+  --listers-package "${THIS_REPO}/pkg/clients/lister"
 
 ${WORK_DIR}/go/bin/deepcopy-gen \
   --input-dirs="${API_PKG}" \
