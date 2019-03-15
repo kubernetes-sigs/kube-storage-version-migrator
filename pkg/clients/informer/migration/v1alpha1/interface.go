@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/informer/internalinterfaces"
+	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

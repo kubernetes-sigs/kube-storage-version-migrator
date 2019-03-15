@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset"
+	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"

@@ -22,9 +22,9 @@ import (
 	time "time"
 
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
-	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clientset"
-	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/informer/internalinterfaces"
-	v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/lister/migration/v1alpha1"
+	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
+	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/internalinterfaces"
+	v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/lister/migration/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
