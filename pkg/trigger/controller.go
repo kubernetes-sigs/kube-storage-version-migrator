@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/klog/glog"
 )
 
 var (
@@ -137,6 +138,7 @@ func (mt *MigrationTrigger) enqueueResource(migration *migrationv1alpha1.Storage
 func (mt *MigrationTrigger) Run(stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 	go mt.migrationInformer.Run(stopCh)
+	glog.V(2).Infof("CHAO: before wait for cache sync")
 	if !cache.WaitForCacheSync(stopCh, mt.migrationInformer.HasSynced) {
 		utilruntime.HandleError(fmt.Errorf("Unable to sync caches"))
 		return
@@ -166,6 +168,8 @@ func (mt *MigrationTrigger) Run(stopCh <-chan struct{}) {
 	// TODO: if we let the migration note down the currentStorageVersion,
 	// we can avoid the race.
 	ticker := time.NewTicker(discoveryPeriod)
+	// Do a discovery once started.
+	mt.processDiscovery()
 	for {
 		select {
 		case <-ticker.C:

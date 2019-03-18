@@ -24,8 +24,10 @@ import (
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/klog/glog"
 )
 
 func (mt *MigrationTrigger) processDiscovery() {
@@ -45,7 +47,18 @@ func (mt *MigrationTrigger) processDiscovery() {
 	}
 	mt.heartbeat = metav1.Now()
 	for _, l := range resources {
+		gv, err := schema.ParseGroupVersion(l.GroupVersion)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("unexpected group version error: %v", err))
+			continue
+		}
 		for _, r := range l.APIResources {
+			if r.Group == "" {
+				r.Group = gv.Group
+			}
+			if r.Version == "" {
+				r.Version = gv.Version
+			}
 			mt.processDiscoveryResource(r)
 		}
 	}
@@ -54,6 +67,7 @@ func (mt *MigrationTrigger) processDiscovery() {
 func toGroupResource(r metav1.APIResource) migrationv1alpha1.GroupVersionResource {
 	return migrationv1alpha1.GroupVersionResource{
 		Group:    r.Group,
+		Version:  r.Version,
 		Resource: r.Name,
 	}
 }
@@ -80,6 +94,19 @@ func (mt *MigrationTrigger) cleanMigrations(r metav1.APIResource) error {
 		}
 	}
 	return nil
+}
+
+func (mt *MigrationTrigger) launchMigration(resource migrationv1alpha1.GroupVersionResource) error {
+	m := &migrationv1alpha1.StorageVersionMigration{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: storageStateName(resource) + "-",
+		},
+		Spec: migrationv1alpha1.StorageVersionMigrationSpec{
+			Resource: resource,
+		},
+	}
+	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations(namespaceName).Create(m)
+	return err
 }
 
 // relaunchMigration cleans existing migrations for the resource, and launch a new one.
@@ -148,6 +175,11 @@ func (mt *MigrationTrigger) staleStorageState(ss *migrationv1alpha1.StorageState
 }
 
 func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
+	glog.V(2).Infof("CHAO: processing %v", r)
+	if r.StorageVersionHash == "" {
+		glog.V(2).Infof("ignored resource %s because its storageVersionHash is empty", r.Name)
+		return
+	}
 	ss, getErr := mt.client.MigrationV1alpha1().StorageStates().Get(storageStateName(toGroupResource(r)), metav1.GetOptions{})
 	if getErr != nil && !errors.IsNotFound(getErr) {
 		utilruntime.HandleError(getErr)

@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/golang/glog"
+	"k8s.io/klog/glog"
 
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
@@ -53,6 +53,7 @@ func NewKubeMigrator(dynamic dynamic.Interface, migrationClient migrationclient.
 }
 
 func (km *KubeMigrator) Run(stopCh <-chan struct{}) {
+	glog.V(2).Infof("CHAO: KubeMigrator running")
 	defer utilruntime.HandleCrash()
 	go km.migrationInformer.Run(stopCh)
 	if !cache.WaitForCacheSync(stopCh, km.migrationInformer.HasSynced) {
@@ -95,6 +96,7 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	if !ok {
 		return fmt.Errorf("expected StorageVersionMigration, got %#v", reflect.TypeOf(obj))
 	}
+	glog.V(2).Infof("CHAO: start migrating %#v", m)
 	// get the fresh object from the apiserver to make sure the object
 	// still exists, and the object is not completed.
 	m, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(m.Namespace).Get(m.Name, metav1.GetOptions{})
@@ -117,6 +119,7 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	// event handler with the migrationInformer to interrupt the Run().
 	err = core.Run()
 	utilruntime.HandleError(err)
+	fmt.Println("CHAO: core.Run is done, going to update status")
 	if err == nil {
 		_, err = km.updateStatus(m, migrationv1alpha1.MigrationSucceeded, "")
 		return err
