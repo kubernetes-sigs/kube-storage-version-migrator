@@ -104,6 +104,17 @@ cleanup() {
 
 trap cleanup EXIT
 
+ls ~/.kube/
+echo "user is"
+echo $USER
+echo "which ginkgo"
+which ginkgo
+kubectl config view
+
+
+
+sleep 6000
+
 # Sanity check.
 # Note that the log inidicates that the kubectl in the test driver is v1.10.7
 kubectl version
