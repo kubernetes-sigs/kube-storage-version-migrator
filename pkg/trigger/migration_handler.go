@@ -26,11 +26,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/klog/glog"
 )
 
 func storageStateName(resource migrationv1alpha1.GroupVersionResource) string {
 	// TODO: add this rule to the CRD validation
 	// TODO: we might use ResourceID as the name in the future.
+	if resource.Group == "" {
+		return resource.Resource
+	}
 	return resource.Resource + "." + resource.Group
 }
 
@@ -60,20 +64,8 @@ func (mt *MigrationTrigger) markStorageStateSucceeded(resource migrationv1alpha1
 	})
 }
 
-func (mt *MigrationTrigger) launchMigration(resource migrationv1alpha1.GroupVersionResource) error {
-	m := &migrationv1alpha1.StorageVersionMigration{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: storageStateName(resource),
-		},
-		Spec: migrationv1alpha1.StorageVersionMigrationSpec{
-			Resource: resource,
-		},
-	}
-	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations(namespaceName).Create(m)
-	return err
-}
-
 func (mt *MigrationTrigger) processMigration(m *migrationv1alpha1.StorageVersionMigration) error {
+	glog.V(2).Infof("processing migration %#v", m)
 	switch {
 	case controller.HasCondition(m, migrationv1alpha1.MigrationSucceeded):
 		return mt.markStorageStateSucceeded(m.Spec.Resource)

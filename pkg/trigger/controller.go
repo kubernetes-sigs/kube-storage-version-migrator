@@ -166,6 +166,8 @@ func (mt *MigrationTrigger) Run(stopCh <-chan struct{}) {
 	// TODO: if we let the migration note down the currentStorageVersion,
 	// we can avoid the race.
 	ticker := time.NewTicker(discoveryPeriod)
+	// Do a discovery once started.
+	mt.processDiscovery()
 	for {
 		select {
 		case <-ticker.C:

@@ -5,21 +5,23 @@ import (
 	"os"
 
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/trigger"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 )
 
 const (
-	migratorUserAgent = "storage-version-migration-migrator"
+	triggerUserAgent = "storage-version-migration-trigger"
 )
 
-func NewMigratorCommand() *cobra.Command {
+func NewTriggerCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:  "kube-storage-migrator",
-		Long: `The Kubernetes storage migrator migrates resources based on the StorageVersionMigrations APIs.`,
+		Use: "kube-storage-migrator-trigger",
+		Long: `The Kubernetes storage migrator triggering controller
+		detects storage version changes and creates migration requests.
+		It also records the status of the storage via the storageState
+		API.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := Run(wait.NeverStop); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
@@ -35,18 +37,11 @@ func Run(stopCh <-chan struct{}) error {
 	if err != nil {
 		return err
 	}
-	dynamic, err := dynamic.NewForConfig(rest.AddUserAgent(config, migratorUserAgent))
+	migration, err := migrationclient.NewForConfig(rest.AddUserAgent(config, triggerUserAgent))
 	if err != nil {
 		return err
 	}
-	migration, err := migrationclient.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-	c := controller.NewKubeMigrator(
-		dynamic,
-		migration,
-	)
+	c := trigger.NewMigrationTrigger(migration)
 	c.Run(stopCh)
 	panic("unreachable")
 }

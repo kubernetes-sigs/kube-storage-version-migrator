@@ -158,9 +158,11 @@ func (init *initializer) initializeNamespace() error {
 }
 
 func (init *initializer) Initialize() error {
+	// TODO: remove deployment code.
 	if err := init.initializeCRD(); err != nil {
 		return err
 	}
+	// TODO: remove deployment code.
 	if err := init.initializeNamespace(); err != nil {
 		return err
 	}

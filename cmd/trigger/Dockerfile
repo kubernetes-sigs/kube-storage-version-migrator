@@ -14,5 +14,5 @@
 
 FROM gcr.io/distroless/static:latest
 
-ADD initializer /initializer
-ENTRYPOINT ["/initializer", "--alsologtostderr", "--v=2"]
+ADD trigger /trigger
+ENTRYPOINT ["/trigger", "--alsologtostderr", "--v=2"]
