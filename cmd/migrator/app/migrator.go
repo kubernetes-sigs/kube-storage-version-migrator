@@ -16,9 +16,9 @@ const (
 	migratorUserAgent = "storage-version-migration-migrator"
 )
 
-func NewInitializerCommand() *cobra.Command {
+func NewMigratorCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:  "kube-storage-migrator-initializer",
+		Use:  "kube-storage-migrator",
 		Long: `The Kubernetes storage migrator migrates resources based on the StorageVersionMigrations APIs.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := Run(wait.NeverStop); err != nil {

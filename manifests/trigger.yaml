@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trigger
+  namespace: kube-storage-migration
+  labels:
+    app: trigger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trigger
+  template:
+    metadata:
+      labels:
+        app: trigger
+    spec:
+      containers:
+      - name: trigger
+        image: REGISTRY/storage-version-migration-trigger:VERSION

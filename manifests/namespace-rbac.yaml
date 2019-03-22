@@ -6,6 +6,18 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
+  name: storage-version-migration-trigger
+rules:
+- apiGroups: ["migration.k8s.io"]
+  resources: ["storagestates"]
+  verbs: ["watch", "get", "list", "delete", "create", "update"]
+- apiGroups: ["migration.k8s.io"]
+  resources: ["storageversionmigrations"]
+  verbs: ["watch", "get", "list", "delete", "create"]
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
   name: storage-version-migration-migrator
 rules:
 - apiGroups: ["*"]
@@ -45,6 +57,19 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: storage-version-migration-migrator
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-trigger
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-storage-migration
+roleRef:
+  kind: ClusterRole
+  name: storage-version-migration-trigger
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ClusterRoleBinding

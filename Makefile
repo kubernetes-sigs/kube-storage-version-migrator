@@ -18,7 +18,7 @@ DELETE ?= "gcloud container images delete"
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./pkg/...
 
 .PHONY: all
 all:
@@ -36,6 +36,13 @@ all-containers:
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o cmd/migrator/migrator ./cmd/migrator
 	docker build --no-cache -t $(REGISTRY)/storage-version-migration-migrator:$(VERSION) cmd/migrator
 	rm cmd/migrator/migrator
+	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o cmd/trigger/trigger ./cmd/trigger
+	docker build --no-cache -t $(REGISTRY)/storage-version-migration-trigger:$(VERSION) cmd/trigger
+	rm cmd/trigger/trigger
+
+.PHONY: e2e-test
+e2e-test:
+	CGO_ENABLED=0 GOOS=linux go test -c -o ./test/e2e/e2e.test ./test/e2e
 
 .PHONY: local-manifests
 local-manifests:
@@ -48,11 +55,13 @@ local-manifests:
 push-all: all-containers
 	docker push $(REGISTRY)/storage-version-migration-initializer:$(VERSION)
 	docker push $(REGISTRY)/storage-version-migration-migrator:$(VERSION)
+	docker push $(REGISTRY)/storage-version-migration-trigger:$(VERSION)
 
 .PHONY: delete-all-images
 delete-all-images:
 	eval "$(DELETE) $(REGISTRY)/storage-version-migration-initializer:$(VERSION)"
 	eval "$(DELETE) $(REGISTRY)/storage-version-migration-migrator:$(VERSION)"
+	eval "$(DELETE) $(REGISTRY)/storage-version-migration-trigger:$(VERSION)"
 
 .PHONY: clean
 clean:
