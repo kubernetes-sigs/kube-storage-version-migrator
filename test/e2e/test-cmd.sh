@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script tests manually started storage migration via the migration
+# initializer binary.
+
 set -o errexit
 set -o nounset
 set -o pipefail
