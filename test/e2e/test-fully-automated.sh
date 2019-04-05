@@ -57,5 +57,5 @@ popd
 
 pushd "${MIGRATOR_ROOT}"
   make e2e-test
-  "${ginkgo}" "${MIGRATOR_ROOT}/test/e2e/e2e.test"
+  "${ginkgo}" -v "$@" "${MIGRATOR_ROOT}/test/e2e/e2e.test"
 popd
