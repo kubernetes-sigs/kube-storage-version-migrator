@@ -26,8 +26,14 @@ REGISTRY=""
 VERSION=""
 
 TESTFILE="v1beta2-controllerrevision.proto"
-# for etcd server that has enabled mTLS 
+# For etcd server that has enabled mTLS
 TLS_ARGS="--cacert /etc/srv/kubernetes/pki/etcd-apiserver-ca.crt --cert /etc/srv/kubernetes/pki/etcd-apiserver-client.crt --key /etc/srv/kubernetes/pki/etcd-apiserver-client.key"
+# Unset the TLS_ARGS if etcd is not enabled.
+gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+  "cat /etc/kubernetes/manifests/etcd.manifest | grep '\-\-listen-client-urls https:'" && rc=$? || rc=$?
+if [[ $rc -ne 0 ]]; then
+  TLS_ARGS=""
+fi
 
 
 function wait-for-migration()
@@ -136,13 +142,6 @@ etcd_container=$(echo "${result}" | grep "etcd-server-${CLUSTER_NAME}-master" | 
 # Copy the proto file to the etcd container
 gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
   "docker cp ${TESTFILE} ${etcd_container}:/"
-
-# Check if etcd tls is enabled
-gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-  "cat /etc/kubernetes/manifests/etcd.manifest | grep '\-\-listen-client-urls https:'" && rc=$? || rc=$?
-if [[ $rc -ne 0 ]]; then
-  TLS_ARGS=""
-fi
 
 # Create the object via etcdctl
 gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
