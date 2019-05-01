@@ -46,9 +46,9 @@ func storageVersionHash(d discovery.DiscoveryInterface, groupversion, resource s
 	return "", nil
 }
 
-var _ = Describe("[storage-version-migrator]", func() {
+var _ = Describe("storage version migrator", func() {
 	It("should migrate CRD", func() {
-		// setup the client
+		setupMigrator()
 		cfg, err := clientcmd.BuildConfigFromFlags("", "/workspace/.kube/config")
 		if err != nil {
 			util.Failf("can't build client config: %v", err)
@@ -58,32 +58,6 @@ var _ = Describe("[storage-version-migrator]", func() {
 			util.Failf("can't build client: %v", err)
 		}
 
-		// setup the migration system
-		testCRD := "../../test/e2e/crd.yaml"
-		crds := "../../manifests.local/crd.yaml"
-		rbacs := "../../manifests.local/namespace-rbac.yaml"
-		trigger := "../../manifests.local/trigger.yaml"
-		migrator := "../../manifests.local/migrator.yaml"
-		output, err := exec.Command("kubectl", "apply", "-f", testCRD).CombinedOutput()
-		if err != nil {
-			util.Failf("%s", output)
-		}
-		output, err = exec.Command("kubectl", "apply", "-f", crds).CombinedOutput()
-		if err != nil {
-			util.Failf("%s", output)
-		}
-		output, err = exec.Command("kubectl", "apply", "-f", rbacs).CombinedOutput()
-		if err != nil {
-			util.Failf("%s", output)
-		}
-		output, err = exec.Command("kubectl", "apply", "-f", migrator).CombinedOutput()
-		if err != nil {
-			util.Failf("%s", output)
-		}
-		output, err = exec.Command("kubectl", "apply", "-f", trigger).CombinedOutput()
-		if err != nil {
-			util.Failf("%s", output)
-		}
 		By("Wait for the testCRD to appear in the discovery document")
 		var v1Hash string
 		err = wait.PollImmediate(10*time.Second, 1*time.Minute, func() (bool, error) {
@@ -137,7 +111,7 @@ var _ = Describe("[storage-version-migrator]", func() {
 		}
 
 		By("Change the storage version of the CRD")
-		output, err = exec.Command("kubectl", "patch", "crd", "tests.migrationtest.k8s.io", `--patch={"spec":{"versions":[{"name":"v1","served":true,"storage":false},{"name":"v2","served":true,"storage":true}]}}`).CombinedOutput()
+		output, err := exec.Command("kubectl", "patch", "crd", "tests.migrationtest.k8s.io", `--patch={"spec":{"versions":[{"name":"v1","served":true,"storage":false},{"name":"v2","served":true,"storage":true}]}}`).CombinedOutput()
 		if err != nil {
 			util.Failf("%s", output)
 		}

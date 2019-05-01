@@ -26,6 +26,9 @@ REGISTRY=""
 VERSION=""
 
 TESTFILE="v1beta2-controllerrevision.proto"
+# for etcd server that has enabled mTLS 
+TLS_ARGS="--cacert /etc/srv/kubernetes/pki/etcd-apiserver-ca.crt --cert /etc/srv/kubernetes/pki/etcd-apiserver-client.crt --key /etc/srv/kubernetes/pki/etcd-apiserver-client.key"
+
 
 function wait-for-migration()
 {
@@ -78,7 +81,7 @@ function wait-for-migration()
 verify-version()
 {
   version=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-    "docker exec $1 /bin/sh -c \"ETCDCTL_API=3 etcdctl get /registry/controllerrevisions/default/sample\" | grep -a apps")
+    "docker exec $1 /bin/sh -c \"ETCDCTL_API=3 etcdctl ${TLS_ARGS} get /registry/controllerrevisions/default/sample\" | grep -a apps")
   # Remove the trailing non-printable character. The data is encoded in proto, so
   # it has non-printable characters.
   version=$(tr -dc '[[:print:]]' <<< "${version}")
@@ -120,6 +123,7 @@ gcloud auth configure-docker
 # create the object via the apiserver, because apiserver always encode the
 # object to the default storage version before storing in etcd.
 
+
 # Copy the pre-made proto file of the object to the master machine.
 user_name=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command "whoami")
 gcloud compute scp "${MIGRATORROOT}/test/e2e/${TESTFILE}" "${user_name}@${CLUSTER_NAME}-master:~/" --project "${PROJECT}" --zone "${KUBE_GCE_ZONE}"
@@ -133,9 +137,16 @@ etcd_container=$(echo "${result}" | grep "etcd-server-${CLUSTER_NAME}-master" | 
 gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
   "docker cp ${TESTFILE} ${etcd_container}:/"
 
+# Check if etcd tls is enabled
+gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+  "cat /etc/kubernetes/manifests/etcd.manifest | grep '\-\-listen-client-urls https:'" && rc=$? || rc=$?
+if [[ $rc -ne 0 ]]; then
+  TLS_ARGS=""
+fi
+
 # Create the object via etcdctl
 gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-  "docker exec ${etcd_container} /bin/sh -c \"cat /${TESTFILE} | ETCDCTL_API=3 etcdctl put /registry/controllerrevisions/default/sample\""
+  "docker exec ${etcd_container} /bin/sh -c \"cat /${TESTFILE} | ETCDCTL_API=3 etcdctl ${TLS_ARGS} put /registry/controllerrevisions/default/sample\""
 
 #TODO: remove
 # Verify that the ControllerRevision is encoded as apps/v1beta2.
