@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator/metrics"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,12 +43,12 @@ const (
 type migrator struct {
 	resource    schema.GroupVersionResource
 	client      dynamic.Interface
-	progress    *progressTracker
+	progress    progressInterface
 	concurrency int
 }
 
 // NewMigrator creates a migrator that can migrate a single resource type.
-func NewMigrator(resource schema.GroupVersionResource, client dynamic.Interface, progress *progressTracker) *migrator {
+func NewMigrator(resource schema.GroupVersionResource, client dynamic.Interface, progress progressInterface) *migrator {
 	return &migrator{
 		resource:    resource,
 		client:      client,
@@ -117,6 +118,8 @@ func (m *migrator) Run() error {
 		if err != nil {
 			return err
 		}
+		metrics.Metrics.ObserveObjectsMigrated(len(list.Items), m.resource.String())
+		// TODO: call ObserveObjectsRemaining as well, once https://github.com/kubernetes/kubernetes/pull/75993 is in.
 		if len(token) == 0 {
 			return nil
 		}

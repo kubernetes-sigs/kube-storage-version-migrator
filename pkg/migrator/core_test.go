@@ -21,7 +21,10 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/api/core/v1"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator/metrics"
+	"github.com/prometheus/client_golang/prometheus"
+	ptype "github.com/prometheus/client_model/go"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -96,6 +99,7 @@ func toUnstructuredListOrDie(l interface{}) *unstructured.UnstructuredList {
 }
 
 func TestMigrateList(t *testing.T) {
+	metrics.Metrics.Reset()
 	podList := newPodList(100)
 	client := fake.NewSimpleDynamicClient(scheme.Scheme, &podList)
 
@@ -198,6 +202,7 @@ func TestMigrateList(t *testing.T) {
 }
 
 func TestMigrateListClusterScoped(t *testing.T) {
+	metrics.Metrics.Reset()
 	nodeList := newNodeList(100)
 	client := fake.NewSimpleDynamicClient(scheme.Scheme, &nodeList)
 
@@ -232,6 +237,78 @@ func TestMigrateListClusterScoped(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		if !nodeSet.Has(fmt.Sprintf("node%d", i)) {
 			t.Errorf("missing node %d", i)
+		}
+	}
+}
+
+type fakeProgress struct{}
+
+func (f *fakeProgress) load() (string, error) {
+	return "", nil
+}
+
+func (f *fakeProgress) save(string) error {
+	return nil
+}
+
+func TestMetrics(t *testing.T) {
+	metrics.Metrics.Reset()
+	// fake client doesn't support pagination, so we can't test complex behavior.
+	nodeList := newNodeList(100)
+	client := fake.NewSimpleDynamicClient(scheme.Scheme, toUnstructuredListOrDie(nodeList))
+	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("nodes"), client, &fakeProgress{})
+	migrator.Run()
+	expectCounterCount(t,
+		"storage_migrator_core_migrator_migrated_objects",
+		map[string]string{
+			"resource": "/v1, Resource=nodes",
+		},
+		100,
+	)
+
+}
+
+func labelsMatch(metric *ptype.Metric, labelFilter map[string]string) bool {
+NEXT_FILTER:
+	for k, v := range labelFilter {
+		for _, lp := range metric.GetLabel() {
+			if lp.GetName() == k && lp.GetValue() != v {
+				return false
+			}
+			if lp.GetName() == k && lp.GetValue() == v {
+				continue NEXT_FILTER
+			}
+		}
+		return false
+	}
+	return true
+}
+
+func expectCounterCount(t *testing.T, name string, labelFilter map[string]string, wantCount int) {
+	metrics, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		t.Fatalf("Failed to gather metrics: %s", err)
+	}
+	counterSum := 0
+	for _, mf := range metrics {
+		if mf.GetName() != name {
+			continue // Ignore other metrics.
+		}
+		for _, metric := range mf.GetMetric() {
+			if !labelsMatch(metric, labelFilter) {
+				continue
+			}
+			counterSum += int(metric.GetCounter().GetValue())
+		}
+	}
+	if wantCount != counterSum {
+		t.Errorf("Wanted count %d, got %d for metric %s with labels %#+v", wantCount, counterSum, name, labelFilter)
+		for _, mf := range metrics {
+			if mf.GetName() == name {
+				for _, metric := range mf.GetMetric() {
+					t.Logf("\tnear match: %s", metric.String())
+				}
+			}
 		}
 	}
 }
