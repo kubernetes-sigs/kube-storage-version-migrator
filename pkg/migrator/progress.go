@@ -22,13 +22,18 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
+type progressInterface interface {
+	save(continueToken string) error
+	load() (continueToken string, err error)
+}
+
 type progressTracker struct {
 	client migrationclient.StorageVersionMigrationInterface
 	name   string
 }
 
 // NewProgressTracker returns a progress tracker.
-func NewProgressTracker(client migrationclient.StorageVersionMigrationInterface, name string) *progressTracker {
+func NewProgressTracker(client migrationclient.StorageVersionMigrationInterface, name string) progressInterface {
 	return &progressTracker{
 		client: client,
 		name:   name,

@@ -2,10 +2,12 @@ package app
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
@@ -30,6 +32,9 @@ func NewMigratorCommand() *cobra.Command {
 }
 
 func Run(stopCh <-chan struct{}) error {
+	http.Handle("/metrics", promhttp.Handler())
+	go func() { http.ListenAndServe(":2112", nil) }()
+
 	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
