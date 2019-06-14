@@ -41,11 +41,11 @@ type StorageVersionMigration struct {
 // The names of the group, the version, and the resource.
 type GroupVersionResource struct {
 	// The name of the group.
-	Group string
+	Group string `json:"group,omitempty"`
 	// The name of the version.
-	Version string
+	Version string `json:"version,omitempty"`
 	// The name of the resource.
-	Resource string
+	Resource string `json:"resource,omitempty"`
 }
 
 // Spec of the storage version migration.
@@ -133,9 +133,9 @@ type StorageState struct {
 // The names of the group and the resource.
 type GroupResource struct {
 	// The name of the group.
-	Group string
+	Group string `json:"group,omitempty"`
 	// The name of the resource.
-	Resource string
+	Resource string `json:"resource,omitempty"`
 }
 
 // Specification of the storage state.
