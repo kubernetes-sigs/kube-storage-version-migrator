@@ -26,6 +26,7 @@ import (
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator/metrics"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -119,9 +120,11 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	utilruntime.HandleError(err)
 	if err == nil {
 		_, err = km.updateStatus(m, migrationv1alpha1.MigrationSucceeded, "")
+		metrics.Metrics.ObserveSucceededMigration(resource(m).String())
 		return err
 	}
 	_, err = km.updateStatus(m, migrationv1alpha1.MigrationFailed, err.Error())
+	metrics.Metrics.ObserveFailedMigration(resource(m).String())
 	return err
 }
 
