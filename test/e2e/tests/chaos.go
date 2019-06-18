@@ -256,6 +256,11 @@ func (t *StorageMigratorChaosTest) Run(sem *chaosmonkey.Semaphore) {
 	t.Test(sem.StopCh)
 }
 
+func apiserverAndControllerRestartsFunc() {
+	apiserverRestartsFunc()
+	controllerRestartsFunc()
+}
+
 func apiserverRestartsFunc() {
 	args := []string{"compute", "--project", os.Getenv("PROJECT"), "ssh", "--zone", os.Getenv("KUBE_GCE_ZONE"), os.Getenv("CLUSTER_NAME") + "-master", "--command", "sudo pkill -9 kube-apiserver"}
 
@@ -284,12 +289,33 @@ func apiserverRestartsFunc() {
 			util.Failf("failed waiting for apiserver to come back: %v", err)
 		}
 	}
-	// TODO: restarting the migrator as well.
+}
+
+func controllerRestartsFunc() {
+	By("delete and then recreate trigger and migrator")
+	trigger := "../../manifests.local/trigger.yaml"
+	migrator := "../../manifests.local/migrator.yaml"
+	output, err := exec.Command("kubectl", "delete", "-f", trigger, "--wait=true").CombinedOutput()
+	if err != nil {
+		util.Failf("%s", output)
+	}
+	output, err = exec.Command("kubectl", "delete", "-f", migrator, "--wait=true").CombinedOutput()
+	if err != nil {
+		util.Failf("%s", output)
+	}
+	output, err = exec.Command("kubectl", "apply", "-f", migrator).CombinedOutput()
+	if err != nil {
+		util.Failf("%s", output)
+	}
+	output, err = exec.Command("kubectl", "apply", "-f", trigger).CombinedOutput()
+	if err != nil {
+		util.Failf("%s", output)
+	}
 }
 
 var _ = Describe("[Disruptive] storage version migrator", func() {
-	It("should survive apiserver crashes", func() {
-		cm := chaosmonkey.New(apiserverRestartsFunc)
+	It("should survive apiserver crashes and controller restarts", func() {
+		cm := chaosmonkey.New(apiserverAndControllerRestartsFunc)
 		t := &StorageMigratorChaosTest{}
 		cm.Register(t.Run)
 		cm.Do()
