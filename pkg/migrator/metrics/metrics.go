@@ -63,7 +63,7 @@ func newCoreMigratorMetrics() *CoreMigratorMetrics {
 			Subsystem: subsystem,
 			Name:      "migrations",
 			Help:      "The number of completed migration, labeled with the full resource name, and the status of the migration (failed or succeeded)",
-		}, []string{"resource", "Status"})
+		}, []string{"resource", "status"})
 	prometheus.MustRegister(migration)
 
 	return &CoreMigratorMetrics{
