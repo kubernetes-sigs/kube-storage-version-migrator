@@ -1,7 +1,9 @@
 package app
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
@@ -9,10 +11,15 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
 	triggerUserAgent = "storage-version-migration-trigger"
+)
+
+var (
+	kubeconfigPath = flag.String("kubeconfig", "", "absolute path to the kubeconfig file specifying the apiserver instance. If unspecified, fallback to in-cluster configuration")
 )
 
 func NewTriggerCommand() *cobra.Command {
@@ -32,10 +39,18 @@ func NewTriggerCommand() *cobra.Command {
 }
 
 func Run(stopCh <-chan struct{}) error {
-	// creates the in-cluster config
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return err
+	var err error
+	var config *rest.Config
+	if *kubeconfigPath != "" {
+		config, err = clientcmd.BuildConfigFromFlags("", *kubeconfigPath)
+		if err != nil {
+			log.Fatalf("Error initializing client config: %v for kubeconfig: %v", err.Error(), *kubeconfigPath)
+		}
+	} else {
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			return err
+		}
 	}
 	migration, err := migrationclient.NewForConfig(rest.AddUserAgent(config, triggerUserAgent))
 	if err != nil {

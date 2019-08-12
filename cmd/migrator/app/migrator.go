@@ -1,7 +1,9 @@
 package app
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -12,10 +14,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
 	migratorUserAgent = "storage-version-migration-migrator"
+)
+
+var (
+	kubeconfigPath = flag.String("kubeconfig", "", "absolute path to the kubeconfig file specifying the apiserver instance. If unspecified, fallback to in-cluster configuration")
 )
 
 func NewMigratorCommand() *cobra.Command {
@@ -35,10 +42,18 @@ func Run(stopCh <-chan struct{}) error {
 	http.Handle("/metrics", promhttp.Handler())
 	go func() { http.ListenAndServe(":2112", nil) }()
 
-	// creates the in-cluster config
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return err
+	var err error
+	var config *rest.Config
+	if *kubeconfigPath != "" {
+		config, err = clientcmd.BuildConfigFromFlags("", *kubeconfigPath)
+		if err != nil {
+			log.Fatalf("Error initializing client config: %v for kubeconfig: %v", err.Error(), *kubeconfigPath)
+		}
+	} else {
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			return err
+		}
 	}
 	dynamic, err := dynamic.NewForConfig(rest.AddUserAgent(config, migratorUserAgent))
 	if err != nil {
