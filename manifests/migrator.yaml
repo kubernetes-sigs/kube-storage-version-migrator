@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: migrator
-  namespace: kube-storage-migration
+  namespace: NAMESPACE
   labels:
     app: migrator
 spec:

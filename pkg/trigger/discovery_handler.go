@@ -105,7 +105,7 @@ func (mt *MigrationTrigger) launchMigration(resource migrationv1alpha1.GroupVers
 			Resource: resource,
 		},
 	}
-	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations(namespaceName).Create(m)
+	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations(*namespaceName).Create(m)
 	return err
 }
 
