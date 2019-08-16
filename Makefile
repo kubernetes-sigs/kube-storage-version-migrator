@@ -14,6 +14,7 @@
 
 REGISTRY ?= gcr.io/google-containers
 VERSION ?= v0.1
+NAMESPACE ?= kube-system
 DELETE ?= "gcloud container images delete"
 
 .PHONY: test
@@ -50,6 +51,7 @@ local-manifests:
 	cp manifests/* manifests.local/
 	find ./manifests.local -type f -exec sed -i -e "s|REGISTRY|$(REGISTRY)|g" {} \;
 	find ./manifests.local -type f -exec sed -i -e "s|VERSION|$(VERSION)|g" {} \;
+	find ./manifests.local -type f -exec sed -i -e "s|NAMESPACE|$(NAMESPACE)|g" {} \;
 
 .PHONY: all-containers
 push-all: all-containers

@@ -19,7 +19,7 @@ import (
 
 const (
 	// TODO: centralize the namespace definitions.
-	namespaceName = "kube-storage-migration"
+	namespaceName = "kube-system"
 	// The migration trigger controller redo the discovery every discoveryPeriod.
 	discoveryPeriod = 10 * time.Minute
 )

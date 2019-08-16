@@ -17,12 +17,13 @@ limitations under the License.
 package initializer
 
 import (
+	"flag"
 	"fmt"
 	"time"
 
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -53,13 +54,15 @@ func NewInitializer(
 		discovery:       d,
 		crdClient:       crdClient,
 		namespaceClient: namespaceClient,
-		migrationClient: migrationGetter.StorageVersionMigrations(namespaceName),
+		migrationClient: migrationGetter.StorageVersionMigrations(*namespaceName),
 	}
 }
 
+var (
+	namespaceName = flag.String("namespace", "kube-system", "the namespace the initializer is going to run in. The namespace should be created before running the initializer. The namespace should be the same one where the migrator runs. Default to kube-system.")
+)
+
 const (
-	// TODO: get the namespace name from the enviroment variable
-	namespaceName   = "kube-storage-migration"
 	singularCRDName = "storageversionmigration"
 	pluralCRDName   = "storageversionmigrations"
 	kind            = "StorageVersionMigration"
@@ -145,13 +148,13 @@ func (init *initializer) initializeCRD() error {
 // TODO: remove this function. Users will use provided yaml files to create the
 // namespace, and then create the initializer in the namespace.
 func (init *initializer) initializeNamespace() error {
-	_, err := init.namespaceClient.Get(namespaceName, metav1.GetOptions{})
+	_, err := init.namespaceClient.Get(*namespaceName, metav1.GetOptions{})
 	if (err != nil && !errors.IsNotFound(err)) || err == nil {
 		return err
 	}
 	_, err = init.namespaceClient.Create(&v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: namespaceName,
+			Name: *namespaceName,
 		},
 	})
 	return err

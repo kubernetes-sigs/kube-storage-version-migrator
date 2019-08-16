@@ -40,7 +40,7 @@ function wait-for-migration()
 {
   # wait for initialization
   for count in {0..9}; do
-    tasks=$(kubectl get storageversionmigrations.migration.k8s.io --namespace=kube-storage-migration -o json | jq -r '.items | length') && rc=$? || rc=$?
+    tasks=$(kubectl get storageversionmigrations.migration.k8s.io --namespace=kube-system -o json | jq -r '.items | length') && rc=$? || rc=$?
     if [ ${rc} -ne 0 ]; then
       echo "retry after 10s"
       sleep 10
@@ -59,7 +59,7 @@ function wait-for-migration()
   for count in {0..9}; do
     # pending storageversionmigrations either have no status, or have
     # status.conditions that are not "Succeeded".
-    pendings=$(kubectl get storageversionmigrations.migration.k8s.io --namespace=kube-storage-migration -o json | jq -r '.items[] | select((has("status") | not) or ([ .status.conditions[] | select(.type != "Succeeded" and .status == "True") ] | length !=0) ) | .metadata.namespace + "/" + .metadata.name')
+    pendings=$(kubectl get storageversionmigrations.migration.k8s.io --namespace=kube-system -o json | jq -r '.items[] | select((has("status") | not) or ([ .status.conditions[] | select(.type != "Succeeded" and .status == "True") ] | length !=0) ) | .metadata.namespace + "/" + .metadata.name')
     # Note that number=1 when pendings="".
     number=$(echo "${pendings}" | wc -l)
     if [ -z "${pendings}" ]; then
@@ -76,9 +76,9 @@ function wait-for-migration()
 
   echo "Timed out waiting for migration to complete."
   echo "initializer logs:"
-  kubectl logs --namespace=kube-storage-migration -l job-name=initializer || true
+  kubectl logs --namespace=kube-system -l job-name=initializer || true
   echo "migrator logs:"
-  kubectl logs --namespace=kube-storage-migration -l app=migrator || true
+  kubectl logs --namespace=kube-system -l app=migrator || true
   return 1
 } 
 
@@ -111,7 +111,7 @@ cleanup() {
     echo "Deleting images successfully"
   popd
 
-  kubectl get storageversionmigrations.migration.k8s.io --namespace=kube-storage-migration -o json
+  kubectl get storageversionmigrations.migration.k8s.io --namespace=kube-system -o json
 }
 
 trap cleanup EXIT
