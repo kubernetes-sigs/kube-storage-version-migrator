@@ -36,11 +36,10 @@ rules:
   resources: ["customresourcedefinitions"]
   verbs: ["create", "delete", "get"]
 ---
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: storage-version-migration-initializer
-  namespace: NAMESPACE
 rules:
 - apiGroups: ["migration.k8s.io"]
   resources: ["storageversionmigrations"]
@@ -85,16 +84,15 @@ roleRef:
   name: storage-version-migration-crd-creator
   apiGroup: rbac.authorization.k8s.io
 ---
-kind: RoleBinding
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: storage-version-migration-initializer
-  namespace: NAMESPACE
 subjects:
 - kind: ServiceAccount
   name: default
   namespace: NAMESPACE
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: storage-version-migration-initializer
   apiGroup: rbac.authorization.k8s.io

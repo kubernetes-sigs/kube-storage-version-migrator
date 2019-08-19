@@ -9,7 +9,7 @@ spec:
     listKind: StorageVersionMigrationList
     plural: storageversionmigrations
     singular: storageversionmigration
-  scope: Namespaced
+  scope: Cluster
   subresources:
     status: {}
   version: v1alpha1
