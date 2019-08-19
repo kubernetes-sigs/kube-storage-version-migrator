@@ -86,7 +86,7 @@ func (mt *MigrationTrigger) processQueue(obj interface{}) error {
 	}
 	// historic migrations are cleaned up when the controller observes
 	// storage version changes in the discovery doc.
-	m, err := mt.client.MigrationV1alpha1().StorageVersionMigrations(item.namespace).Get(item.name, metav1.GetOptions{})
+	m, err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Get(item.name, metav1.GetOptions{})
 	if err == nil {
 		return mt.processMigration(m)
 	}

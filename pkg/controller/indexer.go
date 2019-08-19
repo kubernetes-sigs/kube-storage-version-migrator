@@ -23,7 +23,6 @@ import (
 	migration_v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	migrationinformer "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/migration/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -52,7 +51,7 @@ func migrationStatusIndexFunc(obj interface{}) ([]string, error) {
 }
 
 func NewStatusIndexedInformer(c migrationclient.Interface) cache.SharedIndexInformer {
-	return migrationinformer.NewStorageVersionMigrationInformer(c, metav1.NamespaceAll, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc})
+	return migrationinformer.NewStorageVersionMigrationInformer(c, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc})
 }
 
 func ToIndex(r migration_v1alpha1.GroupVersionResource) string {
@@ -69,5 +68,5 @@ func migrationResourceIndexFunc(obj interface{}) ([]string, error) {
 }
 
 func NewStatusAndResourceIndexedInformer(c migrationclient.Interface) cache.SharedIndexInformer {
-	return migrationinformer.NewStorageVersionMigrationInformer(c, metav1.NamespaceAll, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc, ResourceIndex: migrationResourceIndexFunc})
+	return migrationinformer.NewStorageVersionMigrationInformer(c, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc, ResourceIndex: migrationResourceIndexFunc})
 }

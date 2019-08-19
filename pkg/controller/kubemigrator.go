@@ -98,7 +98,7 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	}
 	// get the fresh object from the apiserver to make sure the object
 	// still exists, and the object is not completed.
-	m, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(m.Namespace).Get(m.Name, metav1.GetOptions{})
+	m, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations().Get(m.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	progressTracker := migrator.NewProgressTracker(km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(m.Namespace), m.Name)
+	progressTracker := migrator.NewProgressTracker(km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(), m.Name)
 	core := migrator.NewMigrator(resource(m), km.dynamic, progressTracker)
 	// If the storageVersionMigration object is deleted during Run(), Run()
 	// will return an error when it tries to write the continueToken into the
@@ -160,12 +160,12 @@ func (km *KubeMigrator) updateStatus(m *migrationv1alpha1.StorageVersionMigratio
 		newConditions = append(newConditions, newCondition)
 		m.Status.Conditions = newConditions
 
-		_, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(m.Namespace).UpdateStatus(m)
+		_, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations().UpdateStatus(m)
 		if err == nil {
 			return true, nil
 		}
 		// Always refresh and retry, no matter what kind of error is returned by the apiserver.
-		updated, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(m.Namespace).Get(m.Name, metav1.GetOptions{})
+		updated, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations().Get(m.Name, metav1.GetOptions{})
 		if err == nil {
 			m = updated
 		}

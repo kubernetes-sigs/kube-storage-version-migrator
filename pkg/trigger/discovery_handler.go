@@ -88,9 +88,9 @@ func (mt *MigrationTrigger) cleanMigrations(r metav1.APIResource) error {
 		if !ok {
 			return fmt.Errorf("expected StorageVersionMigration, got %#v", reflect.TypeOf(m))
 		}
-		err := mt.client.MigrationV1alpha1().StorageVersionMigrations(mm.Namespace).Delete(mm.Name, nil)
+		err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Delete(mm.Name, nil)
 		if err != nil {
-			return fmt.Errorf("unexpected error deleting migration %s/%s, %v", mm.Namespace, mm.Name, err)
+			return fmt.Errorf("unexpected error deleting migration %s, %v", mm.Name, err)
 		}
 	}
 	return nil
@@ -105,7 +105,7 @@ func (mt *MigrationTrigger) launchMigration(resource migrationv1alpha1.GroupVers
 			Resource: resource,
 		},
 	}
-	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations(*namespaceName).Create(m)
+	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Create(m)
 	return err
 }
 
