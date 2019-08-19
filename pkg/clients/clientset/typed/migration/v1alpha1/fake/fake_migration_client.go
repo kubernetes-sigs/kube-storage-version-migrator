@@ -32,8 +32,8 @@ func (c *FakeMigrationV1alpha1) StorageStates() v1alpha1.StorageStateInterface {
 	return &FakeStorageStates{c}
 }
 
-func (c *FakeMigrationV1alpha1) StorageVersionMigrations(namespace string) v1alpha1.StorageVersionMigrationInterface {
-	return &FakeStorageVersionMigrations{c, namespace}
+func (c *FakeMigrationV1alpha1) StorageVersionMigrations() v1alpha1.StorageVersionMigrationInterface {
+	return &FakeStorageVersionMigrations{c}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
