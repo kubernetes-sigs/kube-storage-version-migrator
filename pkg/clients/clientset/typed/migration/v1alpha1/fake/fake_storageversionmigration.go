@@ -31,7 +31,6 @@ import (
 // FakeStorageVersionMigrations implements StorageVersionMigrationInterface
 type FakeStorageVersionMigrations struct {
 	Fake *FakeMigrationV1alpha1
-	ns   string
 }
 
 var storageversionmigrationsResource = schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storageversionmigrations"}
@@ -41,8 +40,7 @@ var storageversionmigrationsKind = schema.GroupVersionKind{Group: "migration.k8s
 // Get takes name of the storageVersionMigration, and returns the corresponding storageVersionMigration object, and an error if there is any.
 func (c *FakeStorageVersionMigrations) Get(name string, options v1.GetOptions) (result *v1alpha1.StorageVersionMigration, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(storageversionmigrationsResource, c.ns, name), &v1alpha1.StorageVersionMigration{})
-
+		Invokes(testing.NewRootGetAction(storageversionmigrationsResource, name), &v1alpha1.StorageVersionMigration{})
 	if obj == nil {
 		return nil, err
 	}
@@ -52,8 +50,7 @@ func (c *FakeStorageVersionMigrations) Get(name string, options v1.GetOptions) (
 // List takes label and field selectors, and returns the list of StorageVersionMigrations that match those selectors.
 func (c *FakeStorageVersionMigrations) List(opts v1.ListOptions) (result *v1alpha1.StorageVersionMigrationList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(storageversionmigrationsResource, storageversionmigrationsKind, c.ns, opts), &v1alpha1.StorageVersionMigrationList{})
-
+		Invokes(testing.NewRootListAction(storageversionmigrationsResource, storageversionmigrationsKind, opts), &v1alpha1.StorageVersionMigrationList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -74,15 +71,13 @@ func (c *FakeStorageVersionMigrations) List(opts v1.ListOptions) (result *v1alph
 // Watch returns a watch.Interface that watches the requested storageVersionMigrations.
 func (c *FakeStorageVersionMigrations) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(storageversionmigrationsResource, c.ns, opts))
-
+		InvokesWatch(testing.NewRootWatchAction(storageversionmigrationsResource, opts))
 }
 
 // Create takes the representation of a storageVersionMigration and creates it.  Returns the server's representation of the storageVersionMigration, and an error, if there is any.
 func (c *FakeStorageVersionMigrations) Create(storageVersionMigration *v1alpha1.StorageVersionMigration) (result *v1alpha1.StorageVersionMigration, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(storageversionmigrationsResource, c.ns, storageVersionMigration), &v1alpha1.StorageVersionMigration{})
-
+		Invokes(testing.NewRootCreateAction(storageversionmigrationsResource, storageVersionMigration), &v1alpha1.StorageVersionMigration{})
 	if obj == nil {
 		return nil, err
 	}
@@ -92,8 +87,7 @@ func (c *FakeStorageVersionMigrations) Create(storageVersionMigration *v1alpha1.
 // Update takes the representation of a storageVersionMigration and updates it. Returns the server's representation of the storageVersionMigration, and an error, if there is any.
 func (c *FakeStorageVersionMigrations) Update(storageVersionMigration *v1alpha1.StorageVersionMigration) (result *v1alpha1.StorageVersionMigration, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(storageversionmigrationsResource, c.ns, storageVersionMigration), &v1alpha1.StorageVersionMigration{})
-
+		Invokes(testing.NewRootUpdateAction(storageversionmigrationsResource, storageVersionMigration), &v1alpha1.StorageVersionMigration{})
 	if obj == nil {
 		return nil, err
 	}
@@ -104,8 +98,7 @@ func (c *FakeStorageVersionMigrations) Update(storageVersionMigration *v1alpha1.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 func (c *FakeStorageVersionMigrations) UpdateStatus(storageVersionMigration *v1alpha1.StorageVersionMigration) (*v1alpha1.StorageVersionMigration, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(storageversionmigrationsResource, "status", c.ns, storageVersionMigration), &v1alpha1.StorageVersionMigration{})
-
+		Invokes(testing.NewRootUpdateSubresourceAction(storageversionmigrationsResource, "status", storageVersionMigration), &v1alpha1.StorageVersionMigration{})
 	if obj == nil {
 		return nil, err
 	}
@@ -115,14 +108,13 @@ func (c *FakeStorageVersionMigrations) UpdateStatus(storageVersionMigration *v1a
 // Delete takes name of the storageVersionMigration and deletes it. Returns an error if one occurs.
 func (c *FakeStorageVersionMigrations) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(storageversionmigrationsResource, c.ns, name), &v1alpha1.StorageVersionMigration{})
-
+		Invokes(testing.NewRootDeleteAction(storageversionmigrationsResource, name), &v1alpha1.StorageVersionMigration{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeStorageVersionMigrations) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(storageversionmigrationsResource, c.ns, listOptions)
+	action := testing.NewRootDeleteCollectionAction(storageversionmigrationsResource, listOptions)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.StorageVersionMigrationList{})
 	return err
@@ -131,8 +123,7 @@ func (c *FakeStorageVersionMigrations) DeleteCollection(options *v1.DeleteOption
 // Patch applies the patch and returns the patched storageVersionMigration.
 func (c *FakeStorageVersionMigrations) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.StorageVersionMigration, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(storageversionmigrationsResource, c.ns, name, pt, data, subresources...), &v1alpha1.StorageVersionMigration{})
-
+		Invokes(testing.NewRootPatchSubresourceAction(storageversionmigrationsResource, name, pt, data, subresources...), &v1alpha1.StorageVersionMigration{})
 	if obj == nil {
 		return nil, err
 	}

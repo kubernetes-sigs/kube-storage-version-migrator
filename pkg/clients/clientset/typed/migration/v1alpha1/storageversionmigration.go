@@ -32,7 +32,7 @@ import (
 // StorageVersionMigrationsGetter has a method to return a StorageVersionMigrationInterface.
 // A group's client should implement this interface.
 type StorageVersionMigrationsGetter interface {
-	StorageVersionMigrations(namespace string) StorageVersionMigrationInterface
+	StorageVersionMigrations() StorageVersionMigrationInterface
 }
 
 // StorageVersionMigrationInterface has methods to work with StorageVersionMigration resources.
@@ -52,14 +52,12 @@ type StorageVersionMigrationInterface interface {
 // storageVersionMigrations implements StorageVersionMigrationInterface
 type storageVersionMigrations struct {
 	client rest.Interface
-	ns     string
 }
 
 // newStorageVersionMigrations returns a StorageVersionMigrations
-func newStorageVersionMigrations(c *MigrationV1alpha1Client, namespace string) *storageVersionMigrations {
+func newStorageVersionMigrations(c *MigrationV1alpha1Client) *storageVersionMigrations {
 	return &storageVersionMigrations{
 		client: c.RESTClient(),
-		ns:     namespace,
 	}
 }
 
@@ -67,7 +65,6 @@ func newStorageVersionMigrations(c *MigrationV1alpha1Client, namespace string) *
 func (c *storageVersionMigrations) Get(name string, options v1.GetOptions) (result *v1alpha1.StorageVersionMigration, err error) {
 	result = &v1alpha1.StorageVersionMigration{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
@@ -84,7 +81,6 @@ func (c *storageVersionMigrations) List(opts v1.ListOptions) (result *v1alpha1.S
 	}
 	result = &v1alpha1.StorageVersionMigrationList{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -101,7 +97,6 @@ func (c *storageVersionMigrations) Watch(opts v1.ListOptions) (watch.Interface, 
 	}
 	opts.Watch = true
 	return c.client.Get().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -112,7 +107,6 @@ func (c *storageVersionMigrations) Watch(opts v1.ListOptions) (watch.Interface, 
 func (c *storageVersionMigrations) Create(storageVersionMigration *v1alpha1.StorageVersionMigration) (result *v1alpha1.StorageVersionMigration, err error) {
 	result = &v1alpha1.StorageVersionMigration{}
 	err = c.client.Post().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		Body(storageVersionMigration).
 		Do().
@@ -124,7 +118,6 @@ func (c *storageVersionMigrations) Create(storageVersionMigration *v1alpha1.Stor
 func (c *storageVersionMigrations) Update(storageVersionMigration *v1alpha1.StorageVersionMigration) (result *v1alpha1.StorageVersionMigration, err error) {
 	result = &v1alpha1.StorageVersionMigration{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		Name(storageVersionMigration.Name).
 		Body(storageVersionMigration).
@@ -139,7 +132,6 @@ func (c *storageVersionMigrations) Update(storageVersionMigration *v1alpha1.Stor
 func (c *storageVersionMigrations) UpdateStatus(storageVersionMigration *v1alpha1.StorageVersionMigration) (result *v1alpha1.StorageVersionMigration, err error) {
 	result = &v1alpha1.StorageVersionMigration{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		Name(storageVersionMigration.Name).
 		SubResource("status").
@@ -152,7 +144,6 @@ func (c *storageVersionMigrations) UpdateStatus(storageVersionMigration *v1alpha
 // Delete takes name of the storageVersionMigration and deletes it. Returns an error if one occurs.
 func (c *storageVersionMigrations) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		Name(name).
 		Body(options).
@@ -167,7 +158,6 @@ func (c *storageVersionMigrations) DeleteCollection(options *v1.DeleteOptions, l
 		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -180,7 +170,6 @@ func (c *storageVersionMigrations) DeleteCollection(options *v1.DeleteOptions, l
 func (c *storageVersionMigrations) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.StorageVersionMigration, err error) {
 	result = &v1alpha1.StorageVersionMigration{}
 	err = c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource("storageversionmigrations").
 		SubResource(subresources...).
 		Name(name).

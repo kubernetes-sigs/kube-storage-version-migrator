@@ -41,33 +41,32 @@ type StorageVersionMigrationInformer interface {
 type storageVersionMigrationInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
-	namespace        string
 }
 
 // NewStorageVersionMigrationInformer constructs a new informer for StorageVersionMigration type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewStorageVersionMigrationInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredStorageVersionMigrationInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewStorageVersionMigrationInformer(client clientset.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredStorageVersionMigrationInformer(client, resyncPeriod, indexers, nil)
 }
 
 // NewFilteredStorageVersionMigrationInformer constructs a new informer for StorageVersionMigration type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredStorageVersionMigrationInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredStorageVersionMigrationInformer(client clientset.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MigrationV1alpha1().StorageVersionMigrations(namespace).List(options)
+				return client.MigrationV1alpha1().StorageVersionMigrations().List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MigrationV1alpha1().StorageVersionMigrations(namespace).Watch(options)
+				return client.MigrationV1alpha1().StorageVersionMigrations().Watch(options)
 			},
 		},
 		&migrationv1alpha1.StorageVersionMigration{},
@@ -77,7 +76,7 @@ func NewFilteredStorageVersionMigrationInformer(client clientset.Interface, name
 }
 
 func (f *storageVersionMigrationInformer) defaultInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredStorageVersionMigrationInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewFilteredStorageVersionMigrationInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
 func (f *storageVersionMigrationInformer) Informer() cache.SharedIndexInformer {

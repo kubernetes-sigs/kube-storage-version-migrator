@@ -17,7 +17,6 @@ limitations under the License.
 package trigger
 
 import (
-	"flag"
 	"fmt"
 	"reflect"
 	"time"
@@ -39,8 +38,6 @@ var (
 		Factor:   5.0,
 		Jitter:   0.1,
 	}
-
-	namespaceName = flag.String("namespace", "kube-system", "the namespace the trigger is going to run in. The namespace should be created before running the trigger. The namespace should be the same one where the migrator runs. Default to kube-system.")
 )
 
 const (

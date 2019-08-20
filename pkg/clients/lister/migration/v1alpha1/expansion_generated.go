@@ -25,7 +25,3 @@ type StorageStateListerExpansion interface{}
 // StorageVersionMigrationListerExpansion allows custom methods to be added to
 // StorageVersionMigrationLister.
 type StorageVersionMigrationListerExpansion interface{}
-
-// StorageVersionMigrationNamespaceListerExpansion allows custom methods to be added to
-// StorageVersionMigrationNamespaceLister.
-type StorageVersionMigrationNamespaceListerExpansion interface{}

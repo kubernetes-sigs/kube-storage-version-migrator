@@ -23,6 +23,7 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient:nonNamespaced
 
 // StorageVersionMigration represents a migration of stored data to the latest
 // storage version.

@@ -40,8 +40,8 @@ func (c *MigrationV1alpha1Client) StorageStates() StorageStateInterface {
 	return newStorageStates(c)
 }
 
-func (c *MigrationV1alpha1Client) StorageVersionMigrations(namespace string) StorageVersionMigrationInterface {
-	return newStorageVersionMigrations(c, namespace)
+func (c *MigrationV1alpha1Client) StorageVersionMigrations() StorageVersionMigrationInterface {
+	return newStorageVersionMigrations(c)
 }
 
 // NewForConfig creates a new MigrationV1alpha1Client for the given config.

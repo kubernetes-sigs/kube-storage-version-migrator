@@ -48,5 +48,5 @@ func (v *version) StorageStates() StorageStateInformer {
 
 // StorageVersionMigrations returns a StorageVersionMigrationInformer.
 func (v *version) StorageVersionMigrations() StorageVersionMigrationInformer {
-	return &storageVersionMigrationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+	return &storageVersionMigrationInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }

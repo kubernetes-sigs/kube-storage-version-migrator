@@ -227,7 +227,7 @@ func (t *StorageMigratorChaosTest) Test(done <-chan struct{}) {
 	}
 
 	By("Migrations should have all completed")
-	l, err := t.migrationClient.MigrationV1alpha1().StorageVersionMigrations(namespaceName).List(metav1.ListOptions{})
+	l, err := t.migrationClient.MigrationV1alpha1().StorageVersionMigrations().List(metav1.ListOptions{})
 	if err != nil {
 		util.Failf("%v", err)
 	}

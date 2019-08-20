@@ -18,8 +18,6 @@ import (
 )
 
 const (
-	// TODO: centralize the namespace definitions.
-	namespaceName = "kube-system"
 	// The migration trigger controller redo the discovery every discoveryPeriod.
 	discoveryPeriod = 10 * time.Minute
 )
@@ -173,7 +171,7 @@ var _ = Describe("storage version migrator", func() {
 		}
 
 		By("Migrations should have all completed")
-		l, err := client.MigrationV1alpha1().StorageVersionMigrations(namespaceName).List(metav1.ListOptions{})
+		l, err := client.MigrationV1alpha1().StorageVersionMigrations().List(metav1.ListOptions{})
 		if err != nil {
 			util.Failf("%v", err)
 		}

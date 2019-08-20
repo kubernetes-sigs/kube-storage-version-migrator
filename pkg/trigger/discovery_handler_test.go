@@ -80,11 +80,11 @@ func freshStorageStateWithOldHash() *v1alpha1.StorageState {
 func newMigrationList() *v1alpha1.StorageVersionMigrationList {
 	var migrations []v1alpha1.StorageVersionMigration
 	for i := 0; i < 3; i++ {
-		migration := newMigration(fmt.Sprintf("migration%d", i), fmt.Sprintf("namespace%d", i), v1alpha1.GroupVersionResource{Version: "v1", Resource: "pods"})
+		migration := newMigration(fmt.Sprintf("migration%d", i), v1alpha1.GroupVersionResource{Version: "v1", Resource: "pods"})
 		migrations = append(migrations, migration)
 	}
 	for i := 3; i < 6; i++ {
-		migration := newMigration(fmt.Sprintf("migration%d", i), fmt.Sprintf("namespace%d", i), v1alpha1.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"})
+		migration := newMigration(fmt.Sprintf("migration%d", i), v1alpha1.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"})
 		migrations = append(migrations, migration)
 	}
 	return &v1alpha1.StorageVersionMigrationList{
@@ -96,11 +96,10 @@ func newMigrationList() *v1alpha1.StorageVersionMigrationList {
 	}
 }
 
-func newMigration(name, namespace string, r v1alpha1.GroupVersionResource) v1alpha1.StorageVersionMigration {
+func newMigration(name string, r v1alpha1.GroupVersionResource) v1alpha1.StorageVersionMigration {
 	return v1alpha1.StorageVersionMigration{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name: name,
 		},
 		Spec: v1alpha1.StorageVersionMigrationSpec{
 			Resource: r,
