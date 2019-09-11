@@ -65,5 +65,7 @@ It is safe to upgrade (downgrade) the API server only after the storage version
 migration has completed. To check that, run
 
 ```
-kubectl wait --all --for=condition=Succeeded storageversionmigrations
+kubectl get storageversionmigrations -o=custom-columns=NAME:.spec.resource.resource,STATUS:.status.conditions[0].type
 ```
+
+and see if the status of all migrations are "SUCCEEDED".
