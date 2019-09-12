@@ -2,6 +2,10 @@
 
 This tool migrates stored data in etcd to the latest storage version.
 
+To start using the storage version migrator, see the [user guide][].
+
+[user guide](USER_GUIDE.md)
+
 Related KEPs:
 
 * [Prototype design](https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/0030-storage-migration.md)
