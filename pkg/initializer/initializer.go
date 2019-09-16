@@ -77,7 +77,7 @@ func migrationCRD() *apiextensionsv1beta1.CustomResourceDefinition {
 				Kind:     kind,
 				ListKind: listKind,
 			},
-			Scope: apiextensionsv1beta1.NamespaceScoped,
+			Scope: apiextensionsv1beta1.ClusterScoped,
 			Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
 				Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
 			},
