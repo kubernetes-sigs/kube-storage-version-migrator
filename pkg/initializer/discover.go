@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/discovery"
-	"k8s.io/klog/glog"
+	"k8s.io/klog"
 	apiregistrationv1 "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistration/v1"
 )
 
@@ -84,15 +84,15 @@ func (d *migrationDiscovery) FindMigratableResources() ([]schema.GroupVersionRes
 	for _, resourceList := range resourceLists {
 		gv, err := schema.ParseGroupVersion(resourceList.GroupVersion)
 		if err != nil {
-			glog.Errorf("cannot parse group version %s, ignored", resourceList.GroupVersion)
+			klog.Errorf("cannot parse group version %s, ignored", resourceList.GroupVersion)
 			continue
 		}
 		if customGroups.Has(gv.Group) {
-			glog.V(4).Infof("ignored group %v because it's a custom group", gv.Group)
+			klog.V(4).Infof("ignored group %v because it's a custom group", gv.Group)
 			continue
 		}
 		if aggregatedGroups.Has(gv.Group) {
-			glog.V(4).Infof("ignored group %v because it's an aggregated group", gv.Group)
+			klog.V(4).Infof("ignored group %v because it's an aggregated group", gv.Group)
 			continue
 		}
 		for _, r := range resourceList.APIResources {

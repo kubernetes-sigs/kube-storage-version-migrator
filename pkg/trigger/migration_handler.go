@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/klog/glog"
+	"k8s.io/klog"
 )
 
 func storageStateName(resource migrationv1alpha1.GroupVersionResource) string {
@@ -65,7 +65,7 @@ func (mt *MigrationTrigger) markStorageStateSucceeded(resource migrationv1alpha1
 }
 
 func (mt *MigrationTrigger) processMigration(m *migrationv1alpha1.StorageVersionMigration) error {
-	glog.V(2).Infof("processing migration %#v", m)
+	klog.V(2).Infof("processing migration %#v", m)
 	switch {
 	case controller.HasCondition(m, migrationv1alpha1.MigrationSucceeded):
 		return mt.markStorageStateSucceeded(m.Spec.Resource)

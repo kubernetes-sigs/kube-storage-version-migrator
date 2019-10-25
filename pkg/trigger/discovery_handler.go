@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/klog/glog"
+	"k8s.io/klog"
 )
 
 func (mt *MigrationTrigger) processDiscovery() {
@@ -175,9 +175,9 @@ func (mt *MigrationTrigger) staleStorageState(ss *migrationv1alpha1.StorageState
 }
 
 func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
-	glog.V(4).Infof("processing %#v", r)
+	klog.V(4).Infof("processing %#v", r)
 	if r.StorageVersionHash == "" {
-		glog.V(2).Infof("ignored resource %s because its storageVersionHash is empty", r.Name)
+		klog.V(2).Infof("ignored resource %s because its storageVersionHash is empty", r.Name)
 		return
 	}
 	ss, getErr := mt.client.MigrationV1alpha1().StorageStates().Get(storageStateName(toGroupResource(r)), metav1.GetOptions{})
