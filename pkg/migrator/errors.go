@@ -17,7 +17,10 @@ limitations under the License.
 package migrator
 
 import (
+	"strings"
+
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/net"
 )
 
 // ErrRetriable is a wrapper for an error that a migrator may use to indicate the
@@ -43,6 +46,12 @@ type TemporaryError interface {
 	Temporary() bool
 }
 
+// isConnectionRefusedError checks if the error string include "connection refused"
+// TODO: find a "go-way" to detect this error, probably using *os.SyscallError
+func isConnectionRefusedError(err error) bool {
+	return strings.Contains(err.Error(), "connection refused")
+}
+
 // interpret adds retry information to the provided error. And it might change
 // the error to nil.
 func interpret(err error) error {
@@ -59,6 +68,14 @@ func interpret(err error) error {
 	case errors.IsServerTimeout(err):
 		return ErrRetriable{err}
 	case errors.IsTooManyRequests(err):
+		return ErrRetriable{err}
+	case net.IsProbableEOF(err):
+		return ErrRetriable{err}
+	case net.IsConnectionReset(err):
+		return ErrRetriable{err}
+	case net.IsNoRoutesError(err):
+		return ErrRetriable{err}
+	case isConnectionRefusedError(err):
 		return ErrRetriable{err}
 	default:
 		return err
