@@ -124,10 +124,9 @@ func TestMigrateList(t *testing.T) {
 			if pod51FirstTry {
 				pod51FirstTry = false
 				return true, nil, errors.NewTimeoutError("retriable error", 1)
-			} else {
-				pod51Retried = true
-				return true, nil, nil
 			}
+			pod51Retried = true
+			return true, nil, nil
 		}
 
 		// TODO: enable this injection when
