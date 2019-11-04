@@ -51,6 +51,20 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:1d1cbf539d9ac35eb3148129f96be5537f1a1330cadcc7e3a83b4e72a59672a3"
+  name = "github.com/google/go-cmp"
+  packages = [
+    "cmp",
+    "cmp/internal/diff",
+    "cmp/internal/flags",
+    "cmp/internal/function",
+    "cmp/internal/value",
+  ]
+  pruneopts = "UT"
+  revision = "2d0692c2e9617365a95b295612ac0d4415ba4627"
+  version = "v0.3.1"
+
+[[projects]]
   branch = "master"
   digest = "1:3ee90c0d94da31b442dde97c99635aaafec68d0b8a3c12ee2075c6bdabeec6bb"
   name = "github.com/google/gofuzz"
@@ -355,9 +369,10 @@
   version = "v2.2.1"
 
 [[projects]]
-  digest = "1:408cfea5315b68f027602f7e037010b8d7d256ace178884da117e3096fe23bfb"
+  digest = "1:274e6b4fd11a6a01212ee6af5ba488c7623f5eaa7339d3bb5642220d96ee8744"
   name = "k8s.io/api"
   packages = [
+    "admissionregistration/v1",
     "admissionregistration/v1beta1",
     "apps/v1",
     "apps/v1beta1",
@@ -377,13 +392,18 @@
     "coordination/v1",
     "coordination/v1beta1",
     "core/v1",
+    "discovery/v1alpha1",
     "events/v1beta1",
     "extensions/v1beta1",
     "networking/v1",
+    "networking/v1beta1",
+    "node/v1alpha1",
+    "node/v1beta1",
     "policy/v1beta1",
     "rbac/v1",
     "rbac/v1alpha1",
     "rbac/v1beta1",
+    "scheduling/v1",
     "scheduling/v1alpha1",
     "scheduling/v1beta1",
     "settings/v1alpha1",
@@ -392,29 +412,33 @@
     "storage/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "35c66765f3ca7e0c4a7972e4a2ad3c9753361819"
-  version = "kubernetes-1.15.0-alpha.0"
+  revision = "35e52d86657aba06859dd22099bfa14faf1effb2"
+  version = "kubernetes-1.16.2"
 
 [[projects]]
-  digest = "1:29a759df564b625c991d3afd96dbc9fdc2b1f7923d42793ca2e3316f503041f7"
+  digest = "1:f1cdd4d2912f521276621a264fad3a17cdb16f91a1d97baa9e5e19a711c484e5"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1",
     "pkg/apis/apiextensions/v1beta1",
     "pkg/client/clientset/clientset",
     "pkg/client/clientset/clientset/fake",
     "pkg/client/clientset/clientset/scheme",
+    "pkg/client/clientset/clientset/typed/apiextensions/v1",
+    "pkg/client/clientset/clientset/typed/apiextensions/v1/fake",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake",
   ]
   pruneopts = "UT"
-  revision = "c2539e01bc11cb01fd6413262af85043a8f6bed8"
-  version = "kubernetes-1.15.0-alpha.0"
+  revision = "5357c4baaf6562e4d37c9afc9fef99bd16d76a9f"
+  version = "kubernetes-1.16.2"
 
 [[projects]]
-  digest = "1:bc2cbbb863b1e262a8d1a37b303b77c3269ffa33322c7152b5416cabe99e3a36"
+  digest = "1:3117ca075e40c1a21c81876ae09259212b01d9a5e3895e0cede049c659582e6d"
   name = "k8s.io/apimachinery"
   packages = [
+    "pkg/api/equality",
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
@@ -459,11 +483,11 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
-  revision = "f05b8decd79cf55449e1e5b2cc9f14496ba6b942"
-  version = "kubernetes-1.15.0-alpha.0"
+  revision = "a2eda9f80ab8a454a81bdde16d62a1afe5f931c0"
+  version = "kubernetes-1.16.2"
 
 [[projects]]
-  digest = "1:a82a65d6ed7fd653990bb36a8c22b361a6bbef51e0da64b7189cee557c772e72"
+  digest = "1:e109c0ed75411c6a3fd498e661d2e86af9544cfbae8fe7f59e75e0bcf689035e"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -473,6 +497,8 @@
     "kubernetes",
     "kubernetes/fake",
     "kubernetes/scheme",
+    "kubernetes/typed/admissionregistration/v1",
+    "kubernetes/typed/admissionregistration/v1/fake",
     "kubernetes/typed/admissionregistration/v1beta1",
     "kubernetes/typed/admissionregistration/v1beta1/fake",
     "kubernetes/typed/apps/v1",
@@ -511,12 +537,20 @@
     "kubernetes/typed/coordination/v1beta1/fake",
     "kubernetes/typed/core/v1",
     "kubernetes/typed/core/v1/fake",
+    "kubernetes/typed/discovery/v1alpha1",
+    "kubernetes/typed/discovery/v1alpha1/fake",
     "kubernetes/typed/events/v1beta1",
     "kubernetes/typed/events/v1beta1/fake",
     "kubernetes/typed/extensions/v1beta1",
     "kubernetes/typed/extensions/v1beta1/fake",
     "kubernetes/typed/networking/v1",
     "kubernetes/typed/networking/v1/fake",
+    "kubernetes/typed/networking/v1beta1",
+    "kubernetes/typed/networking/v1beta1/fake",
+    "kubernetes/typed/node/v1alpha1",
+    "kubernetes/typed/node/v1alpha1/fake",
+    "kubernetes/typed/node/v1beta1",
+    "kubernetes/typed/node/v1beta1/fake",
     "kubernetes/typed/policy/v1beta1",
     "kubernetes/typed/policy/v1beta1/fake",
     "kubernetes/typed/rbac/v1",
@@ -525,6 +559,8 @@
     "kubernetes/typed/rbac/v1alpha1/fake",
     "kubernetes/typed/rbac/v1beta1",
     "kubernetes/typed/rbac/v1beta1/fake",
+    "kubernetes/typed/scheduling/v1",
+    "kubernetes/typed/scheduling/v1/fake",
     "kubernetes/typed/scheduling/v1alpha1",
     "kubernetes/typed/scheduling/v1alpha1/fake",
     "kubernetes/typed/scheduling/v1beta1",
@@ -559,26 +595,24 @@
     "util/connrotation",
     "util/flowcontrol",
     "util/homedir",
+    "util/keyutil",
     "util/retry",
     "util/workqueue",
   ]
   pruneopts = "UT"
-  revision = "1f401a01c752f0e9da81bc4b6ff3ca24b9f463a5"
-  version = "kubernetes-1.15.0-alpha.0"
+  revision = "bec269661e48cb1e5fbb0d037f356ffe9e9978a0"
+  version = "kubernetes-1.16.2"
 
 [[projects]]
-  digest = "1:93153ae93df78ae288f0b601122f2a784df3187c9b3fae45c5960a36b52aa771"
+  digest = "1:e2999bf1bb6eddc2a6aa03fe5e6629120a53088926520ca3b4765f77d7ff7eab"
   name = "k8s.io/klog"
-  packages = [
-    ".",
-    "glog",
-  ]
+  packages = ["."]
   pruneopts = "UT"
   revision = "a5bc97fbc634d635061f3146511332c7e313a55a"
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:817007351bb419f24f87b1fef09bdfef7ff425b37516c733895dd3efa035ddcf"
+  digest = "1:0c2aeadc1cfb3c976e759283f3b470439731756b936a2d458a50d99925186e0d"
   name = "k8s.io/kube-aggregator"
   packages = [
     "pkg/apis/apiregistration",
@@ -593,8 +627,8 @@
     "pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1/fake",
   ]
   pruneopts = "UT"
-  revision = "77167fd619a6f12edd78dc171458ec08660f1925"
-  version = "kubernetes-1.15.0-alpha.0"
+  revision = "9587704a8ad47275684f38d0be237504ee7d1ae3"
+  version = "kubernetes-1.16.2"
 
 [[projects]]
   branch = "master"
@@ -605,16 +639,16 @@
   revision = "e494cc58111187acad93e64529228a2fc0153e39"
 
 [[projects]]
-  branch = "master"
-  digest = "1:14e8a3b53e6d8cb5f44783056b71bb2ca1ac7e333939cc97f3e50b579c920845"
+  digest = "1:bb09c1841fd8100fe09b784fa13563ebffd9921d18012e72c8727ce9d4ea0144"
   name = "k8s.io/utils"
   packages = [
     "buffer",
     "integer",
+    "pointer",
     "trace",
   ]
   pruneopts = "UT"
-  revision = "cdba02414f767c89d729b1b9e61d9891f4e82b35"
+  revision = "581e00157fb1a0435d4fac54a52d1ca1e481d60e"
 
 [[projects]]
   digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
@@ -669,7 +703,6 @@
     "k8s.io/client-go/util/retry",
     "k8s.io/client-go/util/workqueue",
     "k8s.io/klog",
-    "k8s.io/klog/glog",
     "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1",
     "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset",
     "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/fake",
