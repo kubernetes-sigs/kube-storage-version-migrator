@@ -21,8 +21,6 @@ import (
 	"reflect"
 	"time"
 
-	"k8s.io/klog/glog"
-
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator"
@@ -33,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/klog"
 )
 
 // KubeMigrator monitors storageVersionMigraiton objects, fulfills the
@@ -103,7 +102,7 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 		return err
 	}
 	if HasCondition(m, migrationv1alpha1.MigrationSucceeded) || HasCondition(m, migrationv1alpha1.MigrationFailed) {
-		glog.V(2).Infof("The migration has already completed for %#v", m)
+		klog.V(2).Infof("The migration has already completed for %#v", m)
 		return nil
 	}
 	m, err = km.updateStatus(m, migrationv1alpha1.MigrationRunning, "")
