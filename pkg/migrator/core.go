@@ -95,6 +95,9 @@ func (m *migrator) Run() error {
 		)
 		if listError != nil && !errors.IsResourceExpired(listError) {
 			if canRetry(listError) {
+				if seconds, delay := errors.SuggestsClientDelay(listError); delay {
+					time.Sleep(time.Duration(seconds) * time.Second)
+				}
 				continue
 			}
 			return listError
