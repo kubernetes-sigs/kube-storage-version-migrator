@@ -6,6 +6,7 @@ import (
 
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/initializer"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/spf13/cobra"
 	crdclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
@@ -36,7 +37,8 @@ func Run() error {
 	if err != nil {
 		return err
 	}
-	clientset, err := kubernetes.NewForConfig(rest.AddUserAgent(config, initializerUserAgent))
+	config.UserAgent = initializerUserAgent + "/" + version.VERSION
+	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return err
 	}

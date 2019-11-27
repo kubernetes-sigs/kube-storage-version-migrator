@@ -6,6 +6,7 @@ import (
 
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/test/e2e/util"
 	. "github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
@@ -13,7 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -51,7 +51,8 @@ var _ = Describe("storage version migrator", func() {
 		if err != nil {
 			util.Failf("can't build client config: %v", err)
 		}
-		client, err := migrationclient.NewForConfig(rest.AddUserAgent(cfg, "e2e test"))
+		cfg.UserAgent = "storage-migration-e2e-test/" + version.VERSION
+		client, err := migrationclient.NewForConfig(cfg)
 		if err != nil {
 			util.Failf("can't build client: %v", err)
 		}
