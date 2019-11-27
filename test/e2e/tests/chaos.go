@@ -10,6 +10,7 @@ import (
 
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/test/e2e/chaosmonkey"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/test/e2e/util"
 	. "github.com/onsi/ginkgo"
@@ -21,7 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -83,7 +83,7 @@ func (t *StorageMigratorChaosTest) setupClients() {
 	if err != nil {
 		util.Failf("can't build client config: %v", err)
 	}
-	cfg = rest.AddUserAgent(cfg, "e2e test")
+	cfg.UserAgent = "storage-migration-chaos-test/" + version.VERSION
 	t.migrationClient, err = migrationclient.NewForConfig(cfg)
 	if err != nil {
 		util.Failf("can't build migration client: %v", err)

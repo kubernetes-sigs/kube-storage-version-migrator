@@ -8,6 +8,7 @@ import (
 
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/trigger"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
@@ -52,7 +53,8 @@ func Run(stopCh <-chan struct{}) error {
 			return err
 		}
 	}
-	migration, err := migrationclient.NewForConfig(rest.AddUserAgent(config, triggerUserAgent))
+	config.UserAgent = triggerUserAgent + "/" + version.VERSION
+	migration, err := migrationclient.NewForConfig(config)
 	if err != nil {
 		return err
 	}

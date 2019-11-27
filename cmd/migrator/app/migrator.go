@@ -9,6 +9,7 @@ import (
 
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -55,7 +56,8 @@ func Run(stopCh <-chan struct{}) error {
 			return err
 		}
 	}
-	dynamic, err := dynamic.NewForConfig(rest.AddUserAgent(config, migratorUserAgent))
+	config.UserAgent = migratorUserAgent + "/" + version.VERSION
+	dynamic, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return err
 	}
