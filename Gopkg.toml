@@ -41,23 +41,23 @@
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.16.2"
+  version = "v0.17.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.16.2"
+  version = "v0.17.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.16.2"
+  version = "v0.17.0"
 
 [[constraint]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.16.2"
+  version = "v0.17.0"
 
 [[constraint]]
   name = "k8s.io/kube-aggregator"
-  version = "kubernetes-1.16.2"
+  version = "v0.17.0"
 
 [[override]]
   name = "gopkg.in/fsnotify.v1"
@@ -65,7 +65,7 @@
 
 [[override]]
   name = "k8s.io/utils"
-  revision = "581e00157fb1a0435d4fac54a52d1ca1e481d60e"
+  revision = "6ca3b61696b65b0e81f1a39b4937fc2d2994ed6a"
 
 [prune]
   go-tests = true
