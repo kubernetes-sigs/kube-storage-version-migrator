@@ -1,7 +1,6 @@
 package app
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -24,6 +24,8 @@ const (
 
 var (
 	kubeconfigPath = flag.String("kubeconfig", "", "absolute path to the kubeconfig file specifying the apiserver instance. If unspecified, fallback to in-cluster configuration")
+	kubeAPIQPS     = flag.Float32("kube-api-qps", rest.DefaultQPS, "QPS to use while talking with kubernetes apiserver.")
+	kubeAPIBurst   = flag.Int("kube-api-burst", rest.DefaultBurst, "Burst to use while talking with kubernetes apiserver.")
 )
 
 func NewMigratorCommand() *cobra.Command {
@@ -56,6 +58,8 @@ func Run(stopCh <-chan struct{}) error {
 			return err
 		}
 	}
+	config.QPS = *kubeAPIQPS
+	config.Burst = *kubeAPIBurst
 	config.UserAgent = migratorUserAgent + "/" + version.VERSION
 	dynamic, err := dynamic.NewForConfig(config)
 	if err != nil {
