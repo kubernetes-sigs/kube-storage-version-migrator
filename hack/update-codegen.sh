@@ -36,7 +36,7 @@ git clone git@github.com:kubernetes/code-generator.git
 popd
 pushd ${WORK_DIR}/go/src/k8s.io/code-generator
 # The version needs to match the one in Gopkg.toml
-git checkout kubernetes-1.15.0-alpha.0
+git checkout kubernetes-1.17.0
 GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/lister-gen
 GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/informer-gen
 GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/client-gen
