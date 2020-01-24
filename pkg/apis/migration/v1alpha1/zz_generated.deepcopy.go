@@ -105,7 +105,7 @@ func (in *StorageState) DeepCopyObject() runtime.Object {
 func (in *StorageStateList) DeepCopyInto(out *StorageStateList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]StorageState, len(*in))
@@ -205,7 +205,7 @@ func (in *StorageVersionMigration) DeepCopyObject() runtime.Object {
 func (in *StorageVersionMigrationList) DeepCopyInto(out *StorageVersionMigrationList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]StorageVersionMigration, len(*in))
