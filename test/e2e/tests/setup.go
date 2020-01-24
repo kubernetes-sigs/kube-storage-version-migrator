@@ -12,7 +12,7 @@ func setupMigrator() {
 	// CRD in the first round of discovery.
 	testCRD := "../../test/e2e/crd.yaml"
 	// setup the migration system
-	crds := "../../manifests.local/crd.yaml"
+	crds := []string{"../../manifests.local/storage_migration_crd.yaml", "../../manifests.local/storage_state_crd.yaml"}
 	rbacs := "../../manifests.local/namespace-rbac.yaml"
 	trigger := "../../manifests.local/trigger.yaml"
 	migrator := "../../manifests.local/migrator.yaml"
@@ -20,7 +20,7 @@ func setupMigrator() {
 	if err != nil {
 		util.Failf("%s", output)
 	}
-	output, err = exec.Command("kubectl", "apply", "-f", crds).CombinedOutput()
+	output, err = exec.Command("kubectl", "apply", "-f", crds[0], "-f", crds[1]).CombinedOutput()
 	if err != nil {
 		util.Failf("%s", output)
 	}
