@@ -23,6 +23,11 @@ API_PKG="${THIS_REPO}/pkg/apis/migration/v1alpha1"
 # Absolute path to this repo
 THIS_REPO_ABSOLUTE="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
 
+go run ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen \
+  schemapatch:manifests="${THIS_REPO_ABSOLUTE}/manifests" \
+  paths="${THIS_REPO_ABSOLUTE}/pkg/apis/migration/v1alpha1" \
+  output:dir="${THIS_REPO_ABSOLUTE}/manifests"
+
 go run ./vendor/k8s.io/code-generator/cmd/client-gen \
   --output-package "${THIS_REPO}/pkg/clients" \
   --clientset-name="clientset" \
