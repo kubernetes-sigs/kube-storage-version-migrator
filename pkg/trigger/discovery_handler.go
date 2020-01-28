@@ -20,14 +20,15 @@ import (
 	"fmt"
 	"reflect"
 
-	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
+
+	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
 )
 
 func (mt *MigrationTrigger) processDiscovery() {
@@ -185,10 +186,11 @@ func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
 		utilruntime.HandleError(getErr)
 		return
 	}
-
-	stale := (getErr == nil && mt.staleStorageState(ss))
-	storageVersionChanged := (getErr == nil && ss.Status.CurrentStorageVersionHash != r.StorageVersionHash)
-	notFound := (getErr != nil && errors.IsNotFound(getErr))
+	found := getErr == nil
+	stale := found && mt.staleStorageState(ss)
+	storageVersionChanged := found && ss.Status.CurrentStorageVersionHash != r.StorageVersionHash
+	needsMigration := found && !mt.isMigrated(ss) && !mt.hasPendingOrRunningMigration(r)
+	relaunchMigration := stale || !found || storageVersionChanged || needsMigration
 
 	if stale {
 		if err := mt.client.MigrationV1alpha1().StorageStates().Delete(storageStateName(toGroupResource(r)), nil); err != nil {
@@ -197,7 +199,7 @@ func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
 		}
 	}
 
-	if stale || storageVersionChanged || notFound {
+	if relaunchMigration {
 		// Note that this means historical migration objects are deleted.
 		if err := mt.relaunchMigration(r); err != nil {
 			utilruntime.HandleError(err)
@@ -206,4 +208,28 @@ func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
 
 	// always update status.heartbeat, sometimes update the version hashes.
 	mt.updateStorageState(r.StorageVersionHash, r)
+}
+func (mt *MigrationTrigger) isMigrated(ss *migrationv1alpha1.StorageState) bool {
+	if len(ss.Status.PersistedStorageVersionHashes) != 1 {
+		return false
+	}
+	return ss.Status.CurrentStorageVersionHash == ss.Status.PersistedStorageVersionHashes[0]
+}
+
+func (mt *MigrationTrigger) hasPendingOrRunningMigration(r metav1.APIResource) bool {
+	// get the corresponding StorageVersionMigration resource
+	migrations, err := mt.migrationInformer.GetIndexer().ByIndex(controller.ResourceIndex, controller.ToIndex(toGroupResource(r)))
+	if err != nil {
+		utilruntime.HandleError(err)
+		return false
+	}
+	for _, migration := range migrations {
+		m := migration.(*migrationv1alpha1.StorageVersionMigration)
+		if controller.HasCondition(m, migrationv1alpha1.MigrationSucceeded) || controller.HasCondition(m, migrationv1alpha1.MigrationFailed) {
+			continue
+		}
+		// migration is running or pending
+		return true
+	}
+	return false
 }

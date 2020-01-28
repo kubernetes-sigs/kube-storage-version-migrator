@@ -36,6 +36,14 @@ cleanup() {
     return
   fi
   pushd "${MIGRATOR_ROOT}"
+    echo "===== migrator logs"
+    kubectl logs --namespace=kube-system deployment/migrator || true
+    echo "===== trigger logs"
+    kubectl logs --namespace=kube-system deployment/trigger || true
+    echo "===== storageversionmigrations"
+    kubectl get storageversionmigrations.migration.k8s.io -o yaml
+    echo "===== storagestates"
+    kubectl get storagestates.migration.k8s.io -o yaml
     echo "Deleting images"
     make delete-all-images
     echo "Deleting images successfully"

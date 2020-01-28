@@ -102,10 +102,11 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 		return err
 	}
 	if HasCondition(m, migrationv1alpha1.MigrationSucceeded) || HasCondition(m, migrationv1alpha1.MigrationFailed) {
-		klog.V(2).Infof("The migration has already completed for %#v", m)
+		klog.V(2).Infof("%v: migration has already completed", m.Name)
 		return nil
 	}
 	m, err = km.updateStatus(m, migrationv1alpha1.MigrationRunning, "")
+	klog.V(2).Infof("%v: migration running", m.Name)
 	if err != nil {
 		return err
 	}
@@ -118,11 +119,17 @@ func (km *KubeMigrator) processOne(obj interface{}) error {
 	err = core.Run()
 	utilruntime.HandleError(err)
 	if err == nil {
-		_, err = km.updateStatus(m, migrationv1alpha1.MigrationSucceeded, "")
+		if _, err := km.updateStatus(m, migrationv1alpha1.MigrationSucceeded, ""); err != nil {
+			utilruntime.HandleError(err)
+		}
 		metrics.Metrics.ObserveSucceededMigration(resource(m).String())
+		klog.V(2).Infof("%v: migration succeeded", m.Name)
 		return err
 	}
-	_, err = km.updateStatus(m, migrationv1alpha1.MigrationFailed, err.Error())
+	klog.Errorf("%v: migration failed: %v", m.Name, err)
+	if _, err := km.updateStatus(m, migrationv1alpha1.MigrationFailed, err.Error()); err != nil {
+		utilruntime.HandleError(err)
+	}
 	metrics.Metrics.ObserveFailedMigration(resource(m).String())
 	return err
 }

@@ -35,6 +35,12 @@ if [[ $rc -ne 0 ]]; then
   TLS_ARGS=""
 fi
 
+function capture-logs() {
+  echo "initializer logs:"
+  kubectl logs --namespace=kube-system job/initializer || true
+  echo "migrator logs:"
+  kubectl logs --namespace=kube-system deployment/migrator || true
+}
 
 function wait-for-migration()
 {
@@ -63,6 +69,7 @@ function wait-for-migration()
     # Note that number=1 when pendings="".
     number=$(echo "${pendings}" | wc -l)
     if [ -z "${pendings}" ]; then
+      capture-logs
       return 0
     else
       echo "${number} migrations haven't succeeded yet"
@@ -75,10 +82,7 @@ function wait-for-migration()
   done
 
   echo "Timed out waiting for migration to complete."
-  echo "initializer logs:"
-  kubectl logs --namespace=kube-system -l job-name=initializer || true
-  echo "migrator logs:"
-  kubectl logs --namespace=kube-system -l app=migrator || true
+  capture-logs
   return 1
 } 
 
