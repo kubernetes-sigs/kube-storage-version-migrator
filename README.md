@@ -2,9 +2,7 @@
 
 This tool migrates stored data in etcd to the latest storage version.
 
-To start using the storage version migrator, see the [user guide][].
-
-[user guide](USER_GUIDE.md)
+To start using the storage version migrator, see the [user guide](USER_GUIDE.md).
 
 Related KEPs:
 
