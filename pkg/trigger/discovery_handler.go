@@ -17,6 +17,7 @@ limitations under the License.
 package trigger
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -31,7 +32,7 @@ import (
 	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
 )
 
-func (mt *MigrationTrigger) processDiscovery() {
+func (mt *MigrationTrigger) processDiscovery(ctx context.Context) {
 	var resources []*metav1.APIResourceList
 	var err2 error
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
@@ -60,7 +61,7 @@ func (mt *MigrationTrigger) processDiscovery() {
 			if r.Version == "" {
 				r.Version = gv.Version
 			}
-			mt.processDiscoveryResource(r)
+			mt.processDiscoveryResource(ctx, r)
 		}
 	}
 }
@@ -74,7 +75,7 @@ func toGroupResource(r metav1.APIResource) migrationv1alpha1.GroupVersionResourc
 }
 
 // cleanMigrations removes all storageVersionMigrations whose .spec.resource == r.
-func (mt *MigrationTrigger) cleanMigrations(r metav1.APIResource) error {
+func (mt *MigrationTrigger) cleanMigrations(ctx context.Context, r metav1.APIResource) error {
 	// Using the cache to find all matching migrations.
 	// The delay of the cache shouldn't matter in practice, because
 	// existing migrations are created by previous discovery cycles, they
@@ -89,7 +90,7 @@ func (mt *MigrationTrigger) cleanMigrations(r metav1.APIResource) error {
 		if !ok {
 			return fmt.Errorf("expected StorageVersionMigration, got %#v", reflect.TypeOf(m))
 		}
-		err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Delete(mm.Name, nil)
+		err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Delete(ctx, mm.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return fmt.Errorf("unexpected error deleting migration %s, %v", mm.Name, err)
 		}
@@ -97,7 +98,7 @@ func (mt *MigrationTrigger) cleanMigrations(r metav1.APIResource) error {
 	return nil
 }
 
-func (mt *MigrationTrigger) launchMigration(resource migrationv1alpha1.GroupVersionResource) error {
+func (mt *MigrationTrigger) launchMigration(ctx context.Context, resource migrationv1alpha1.GroupVersionResource) error {
 	m := &migrationv1alpha1.StorageVersionMigration{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: storageStateName(resource) + "-",
@@ -106,16 +107,16 @@ func (mt *MigrationTrigger) launchMigration(resource migrationv1alpha1.GroupVers
 			Resource: resource,
 		},
 	}
-	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Create(m)
+	_, err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Create(ctx, m, metav1.CreateOptions{})
 	return err
 }
 
 // relaunchMigration cleans existing migrations for the resource, and launch a new one.
-func (mt *MigrationTrigger) relaunchMigration(r metav1.APIResource) error {
-	if err := mt.cleanMigrations(r); err != nil {
+func (mt *MigrationTrigger) relaunchMigration(ctx context.Context, r metav1.APIResource) error {
+	if err := mt.cleanMigrations(ctx, r); err != nil {
 		return err
 	}
-	return mt.launchMigration(toGroupResource(r))
+	return mt.launchMigration(ctx, toGroupResource(r))
 
 }
 
@@ -133,12 +134,12 @@ func (mt *MigrationTrigger) newStorageState(r metav1.APIResource) *migrationv1al
 	}
 }
 
-func (mt *MigrationTrigger) updateStorageState(currentHash string, r metav1.APIResource) error {
+func (mt *MigrationTrigger) updateStorageState(ctx context.Context, currentHash string, r metav1.APIResource) error {
 	// We will retry on any error, because failing to update the
 	// heartbeat of the storageState can lead to redo migration, which is
 	// costly.
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		ss, err := mt.client.MigrationV1alpha1().StorageStates().Get(storageStateName(toGroupResource(r)), metav1.GetOptions{})
+		ss, err := mt.client.MigrationV1alpha1().StorageStates().Get(ctx, storageStateName(toGroupResource(r)), metav1.GetOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilruntime.HandleError(err)
 			return false, nil
@@ -147,7 +148,7 @@ func (mt *MigrationTrigger) updateStorageState(currentHash string, r metav1.APIR
 			// Note that the apiserver resets the status field for
 			// the POST request. We need to update via the status
 			// endpoint.
-			ss, err = mt.client.MigrationV1alpha1().StorageStates().Create(mt.newStorageState(r))
+			ss, err = mt.client.MigrationV1alpha1().StorageStates().Create(ctx, mt.newStorageState(r), metav1.CreateOptions{})
 			if err != nil {
 				utilruntime.HandleError(err)
 				return false, nil
@@ -162,7 +163,7 @@ func (mt *MigrationTrigger) updateStorageState(currentHash string, r metav1.APIR
 			}
 		}
 		ss.Status.LastHeartbeatTime = mt.heartbeat
-		_, err = mt.client.MigrationV1alpha1().StorageStates().UpdateStatus(ss)
+		_, err = mt.client.MigrationV1alpha1().StorageStates().UpdateStatus(ctx, ss, metav1.UpdateOptions{})
 		if err != nil {
 			utilruntime.HandleError(err)
 			return false, nil
@@ -175,13 +176,13 @@ func (mt *MigrationTrigger) staleStorageState(ss *migrationv1alpha1.StorageState
 	return ss.Status.LastHeartbeatTime.Add(2 * discoveryPeriod).Before(mt.heartbeat.Time)
 }
 
-func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
+func (mt *MigrationTrigger) processDiscoveryResource(ctx context.Context, r metav1.APIResource) {
 	klog.V(4).Infof("processing %#v", r)
 	if r.StorageVersionHash == "" {
 		klog.V(2).Infof("ignored resource %s because its storageVersionHash is empty", r.Name)
 		return
 	}
-	ss, getErr := mt.client.MigrationV1alpha1().StorageStates().Get(storageStateName(toGroupResource(r)), metav1.GetOptions{})
+	ss, getErr := mt.client.MigrationV1alpha1().StorageStates().Get(ctx, storageStateName(toGroupResource(r)), metav1.GetOptions{})
 	if getErr != nil && !errors.IsNotFound(getErr) {
 		utilruntime.HandleError(getErr)
 		return
@@ -193,7 +194,7 @@ func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
 	relaunchMigration := stale || !found || storageVersionChanged || needsMigration
 
 	if stale {
-		if err := mt.client.MigrationV1alpha1().StorageStates().Delete(storageStateName(toGroupResource(r)), nil); err != nil {
+		if err := mt.client.MigrationV1alpha1().StorageStates().Delete(ctx, storageStateName(toGroupResource(r)), metav1.DeleteOptions{}); err != nil {
 			utilruntime.HandleError(err)
 			return
 		}
@@ -201,13 +202,13 @@ func (mt *MigrationTrigger) processDiscoveryResource(r metav1.APIResource) {
 
 	if relaunchMigration {
 		// Note that this means historical migration objects are deleted.
-		if err := mt.relaunchMigration(r); err != nil {
+		if err := mt.relaunchMigration(ctx, r); err != nil {
 			utilruntime.HandleError(err)
 		}
 	}
 
 	// always update status.heartbeat, sometimes update the version hashes.
-	mt.updateStorageState(r.StorageVersionHash, r)
+	mt.updateStorageState(ctx, r.StorageVersionHash, r)
 }
 func (mt *MigrationTrigger) isMigrated(ss *migrationv1alpha1.StorageState) bool {
 	if len(ss.Status.PersistedStorageVersionHashes) != 1 {

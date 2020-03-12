@@ -18,13 +18,16 @@ package migrator
 
 import (
 	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1"
+
+	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 )
 
 type progressInterface interface {
-	save(continueToken string) error
-	load() (continueToken string, err error)
+	save(ctx context.Context, continueToken string) error
+	load(ctx context.Context) (continueToken string, err error)
 }
 
 type progressTracker struct {
@@ -40,20 +43,20 @@ func NewProgressTracker(client migrationclient.StorageVersionMigrationInterface,
 	}
 }
 
-func (p *progressTracker) save(continueToken string) error {
+func (p *progressTracker) save(ctx context.Context, continueToken string) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		migration, err := p.client.Get(p.name, metav1.GetOptions{})
+		migration, err := p.client.Get(ctx, p.name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 		migration.Spec.ContinueToken = continueToken
-		_, err = p.client.Update(migration)
+		_, err = p.client.Update(ctx, migration, metav1.UpdateOptions{})
 		return err
 	})
 }
 
-func (p *progressTracker) load() (continueToken string, err error) {
-	migration, err := p.client.Get(p.name, metav1.GetOptions{})
+func (p *progressTracker) load(ctx context.Context) (continueToken string, err error) {
+	migration, err := p.client.Get(ctx, p.name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

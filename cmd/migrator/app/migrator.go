@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -33,7 +33,7 @@ func NewMigratorCommand() *cobra.Command {
 		Use:  "kube-storage-migrator",
 		Long: `The Kubernetes storage migrator migrates resources based on the StorageVersionMigrations APIs.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := Run(wait.NeverStop); err != nil {
+			if err := Run(context.TODO()); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
@@ -41,7 +41,7 @@ func NewMigratorCommand() *cobra.Command {
 	}
 }
 
-func Run(stopCh <-chan struct{}) error {
+func Run(ctx context.Context) error {
 	http.Handle("/metrics", promhttp.Handler())
 	go func() { http.ListenAndServe(":2112", nil) }()
 
@@ -73,6 +73,6 @@ func Run(stopCh <-chan struct{}) error {
 		dynamic,
 		migration,
 	)
-	c.Run(stopCh)
+	c.Run(ctx)
 	panic("unreachable")
 }
