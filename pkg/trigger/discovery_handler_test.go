@@ -17,6 +17,7 @@ limitations under the License.
 package trigger
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -185,7 +186,7 @@ func TestProcessDiscoveryResource(t *testing.T) {
 	}
 	trigger.heartbeat = metav1.Now()
 	discoveredResource := newAPIResource()
-	trigger.processDiscoveryResource(discoveredResource)
+	trigger.processDiscoveryResource(context.TODO(), discoveredResource)
 	actions := client.Actions()
 	verifyCleanupAndLaunch(t, actions[3:7])
 
@@ -213,7 +214,7 @@ func TestProcessDiscoveryResourceStaleState(t *testing.T) {
 	}
 	trigger.heartbeat = metav1.Now()
 	discoveredResource := newAPIResource()
-	trigger.processDiscoveryResource(discoveredResource)
+	trigger.processDiscoveryResource(context.TODO(), discoveredResource)
 
 	actions := client.Actions()
 	d, ok := actions[3].(core.DeleteAction)
@@ -254,7 +255,7 @@ func TestProcessDiscoveryResourceStorageVersionChanged(t *testing.T) {
 	}
 	trigger.heartbeat = metav1.Now()
 	discoveredResource := newAPIResource()
-	trigger.processDiscoveryResource(discoveredResource)
+	trigger.processDiscoveryResource(context.TODO(), discoveredResource)
 
 	actions := client.Actions()
 	verifyCleanupAndLaunch(t, actions[3:7])
@@ -273,7 +274,7 @@ func TestProcessDiscoveryResourceNoChange(t *testing.T) {
 	}
 	trigger.heartbeat = metav1.Now()
 	discoveredResource := newAPIResource()
-	trigger.processDiscoveryResource(discoveredResource)
+	trigger.processDiscoveryResource(context.TODO(), discoveredResource)
 
 	actions := client.Actions()
 	verifyStorageStateUpdate(t, actions[4], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{"newhash"})

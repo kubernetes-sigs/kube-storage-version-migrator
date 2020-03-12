@@ -17,6 +17,7 @@ limitations under the License.
 package initializer
 
 import (
+	"context"
 	"encoding/json"
 	"reflect"
 	"testing"
@@ -349,7 +350,8 @@ func TestFindMigratableResources(t *testing.T) {
 	crdClient := apiextensionsfake.NewSimpleClientset(fakeCRDs(t)...).ApiextensionsV1beta1().CustomResourceDefinitions()
 	apiserviceClient := aggregatorfake.NewSimpleClientset(fakeAPIServices(t)...).ApiregistrationV1().APIServices()
 	d := NewDiscovery(kubernetes.Discovery(), crdClient, apiserviceClient)
-	got, err := d.FindMigratableResources()
+	ctx := context.TODO()
+	got, err := d.FindMigratableResources(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
