@@ -18,3 +18,9 @@ spec:
       containers:
       - name: migrator
         image: REGISTRY/storage-version-migration-migrator:VERSION
+        command:
+          - /migrator
+          - --v=2
+          - --alsologtostderr
+          - --kube-api-qps=40
+          - --kube-api-burst=1000

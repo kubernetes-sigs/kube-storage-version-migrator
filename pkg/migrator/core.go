@@ -22,7 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator/metrics"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +30,9 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/klog"
+
+	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator/metrics"
 )
 
 var metadataAccessor = meta.NewAccessor()
@@ -93,6 +95,10 @@ func (m *migrator) Run() error {
 				Continue: continueToken,
 			},
 		)
+		if errors.IsNotFound(listError) {
+			// Fail this migration, we don't want to get stuck on a migration for a resource that does not exist.
+			return fmt.Errorf("failed to list resources: %v", listError)
+		}
 		if listError != nil && !errors.IsResourceExpired(listError) {
 			if canRetry(listError) {
 				if seconds, delay := errors.SuggestsClientDelay(listError); delay {
@@ -201,8 +207,18 @@ func (m *migrator) migrateOneItem(item *unstructured.Unstructured) error {
 			return nil
 		}
 		if canRetry(err) {
-			if seconds, delay := errors.SuggestsClientDelay(err); delay {
+			seconds, delay := errors.SuggestsClientDelay(err)
+			switch {
+			case delay && len(namespace) > 0:
+				klog.Warningf("migration of %s, in the %s namespace, will be retried after a %ds delay: %v", name, namespace, seconds, err)
 				time.Sleep(time.Duration(seconds) * time.Second)
+			case delay:
+				klog.Warningf("migration of %s will be retried after a %ds delay: %v", name, seconds, err)
+				time.Sleep(time.Duration(seconds) * time.Second)
+			case !delay && len(namespace) > 0:
+				klog.Warningf("migration of %s, in the %s namespace, will be retried: %v", name, namespace, err)
+			default:
+				klog.Warningf("migration of %s will be retried: %v", name, err)
 			}
 			continue
 		}
