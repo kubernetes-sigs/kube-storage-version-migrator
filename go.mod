@@ -19,4 +19,5 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kube-aggregator v0.17.0
 	k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6 // indirect
+	sigs.k8s.io/controller-tools v0.2.8
 )
