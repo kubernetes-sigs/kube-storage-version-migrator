@@ -19,6 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
@@ -60,13 +61,13 @@ func NewFilteredStorageVersionMigrationInformer(client clientset.Interface, resy
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MigrationV1alpha1().StorageVersionMigrations().List(options)
+				return client.MigrationV1alpha1().StorageVersionMigrations().List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MigrationV1alpha1().StorageVersionMigrations().Watch(options)
+				return client.MigrationV1alpha1().StorageVersionMigrations().Watch(context.TODO(), options)
 			},
 		},
 		&migrationv1alpha1.StorageVersionMigration{},
