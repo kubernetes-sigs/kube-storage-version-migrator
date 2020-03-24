@@ -22,40 +22,25 @@ THIS_REPO="github.com/kubernetes-sigs/kube-storage-version-migrator"
 API_PKG="${THIS_REPO}/pkg/apis/migration/v1alpha1"
 # Absolute path to this repo
 THIS_REPO_ABSOLUTE="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
-WORK_DIR=`mktemp -d`
 
-function cleanup {
-  rm -rf "$WORK_DIR"
-}
-trap cleanup EXIT
+go run ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen \
+  schemapatch:manifests="${THIS_REPO_ABSOLUTE}/manifests" \
+  paths="${THIS_REPO_ABSOLUTE}/pkg/apis/migration/v1alpha1" \
+  output:dir="${THIS_REPO_ABSOLUTE}/manifests"
 
-# Install code generators
-mkdir -p ${WORK_DIR}/go/src/k8s.io
-pushd ${WORK_DIR}/go/src/k8s.io
-git clone git@github.com:kubernetes/code-generator.git
-popd
-pushd ${WORK_DIR}/go/src/k8s.io/code-generator
-# The version needs to match the one in Gopkg.toml
-git checkout kubernetes-1.15.0-alpha.0
-GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/lister-gen
-GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/informer-gen
-GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/client-gen
-GOPATH=${WORK_DIR}/go/ go install k8s.io/code-generator/cmd/deepcopy-gen
-popd
-
-${WORK_DIR}/go/bin/client-gen \
+go run ./vendor/k8s.io/code-generator/cmd/client-gen \
   --output-package "${THIS_REPO}/pkg/clients" \
   --clientset-name="clientset" \
   --input-base="${THIS_REPO}" \
   --input="pkg/apis/migration/v1alpha1" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
 
-${WORK_DIR}/go/bin/lister-gen \
+go run ./vendor/k8s.io/code-generator/cmd/lister-gen \
   --output-package "${THIS_REPO}/pkg/clients/lister" \
   --input-dirs="${API_PKG}" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
 
-${WORK_DIR}/go/bin/informer-gen \
+go run ./vendor/k8s.io/code-generator/cmd/informer-gen \
   --output-package "${THIS_REPO}/pkg/clients/informer" \
   --input-dirs="${API_PKG}" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt" \
@@ -63,7 +48,7 @@ ${WORK_DIR}/go/bin/informer-gen \
   --versioned-clientset-package "${THIS_REPO}/pkg/clients/clientset" \
   --listers-package "${THIS_REPO}/pkg/clients/lister"
 
-${WORK_DIR}/go/bin/deepcopy-gen \
+go run ./vendor/k8s.io/code-generator/cmd/deepcopy-gen \
   --input-dirs="${API_PKG}" \
   --output-file-base="zz_generated.deepcopy" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
