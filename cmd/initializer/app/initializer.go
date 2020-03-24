@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -23,7 +24,7 @@ func NewInitializerCommand() *cobra.Command {
 		Use:  "kube-storage-migrator-initializer",
 		Long: `The Kubernetes storage migrator initializer is a job that discovers resources that need migration and creates storageVersionMigration objects for such resources.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := Run(); err != nil {
+			if err := Run(context.TODO()); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
@@ -31,7 +32,7 @@ func NewInitializerCommand() *cobra.Command {
 	}
 }
 
-func Run() error {
+func Run(ctx context.Context) error {
 	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -61,5 +62,5 @@ func Run() error {
 		clientset.CoreV1().Namespaces(),
 		migration.MigrationV1alpha1(),
 	)
-	return init.Initialize()
+	return init.Initialize(ctx)
 }

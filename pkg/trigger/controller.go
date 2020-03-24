@@ -17,6 +17,7 @@ limitations under the License.
 package trigger
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -132,10 +133,10 @@ func (mt *MigrationTrigger) enqueueResource(migration *migrationv1alpha1.Storage
 	mt.queue.Add(it)
 }
 
-func (mt *MigrationTrigger) Run(stopCh <-chan struct{}) {
+func (mt *MigrationTrigger) Run(ctx context.Context) {
 	defer utilruntime.HandleCrash()
-	go mt.migrationInformer.Run(stopCh)
-	if !cache.WaitForCacheSync(stopCh, mt.migrationInformer.HasSynced) {
+	go mt.migrationInformer.Run(ctx.Done())
+	if !cache.WaitForCacheSync(ctx.Done(), mt.migrationInformer.HasSynced) {
 		utilruntime.HandleError(fmt.Errorf("Unable to sync caches"))
 		return
 	}
@@ -165,21 +166,21 @@ func (mt *MigrationTrigger) Run(stopCh <-chan struct{}) {
 	// we can avoid the race.
 	ticker := time.NewTicker(discoveryPeriod)
 	// Do a discovery once started.
-	mt.processDiscovery()
+	mt.processDiscovery(ctx)
 	for {
 		select {
 		case <-ticker.C:
-			mt.processDiscovery()
+			mt.processDiscovery(ctx)
 		case w := <-work:
 			defer mt.queue.Done(w)
-			err := mt.processQueue(w)
+			err := mt.processQueue(ctx, w)
 			if err == nil {
 				mt.queue.Forget(w)
 				break
 			}
 			utilruntime.HandleError(fmt.Errorf("failed to process %v: %v", w, err))
 			mt.queue.AddRateLimited(w)
-		case <-stopCh:
+		case <-ctx.Done():
 			return
 		}
 	}

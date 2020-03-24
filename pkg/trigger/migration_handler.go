@@ -17,6 +17,7 @@ limitations under the License.
 package trigger
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -38,11 +39,11 @@ func storageStateName(resource migrationv1alpha1.GroupVersionResource) string {
 	return resource.Resource + "." + resource.Group
 }
 
-func (mt *MigrationTrigger) markStorageStateSucceeded(resource migrationv1alpha1.GroupVersionResource) error {
+func (mt *MigrationTrigger) markStorageStateSucceeded(ctx context.Context, resource migrationv1alpha1.GroupVersionResource) error {
 	// We will retry on any error. Migrating a resource takes a long time.
 	// It would be a pity to give up just because of an update error.
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		ss, err := mt.client.MigrationV1alpha1().StorageStates().Get(storageStateName(resource), metav1.GetOptions{})
+		ss, err := mt.client.MigrationV1alpha1().StorageStates().Get(ctx, storageStateName(resource), metav1.GetOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilruntime.HandleError(err)
 			return false, nil
@@ -55,7 +56,7 @@ func (mt *MigrationTrigger) markStorageStateSucceeded(resource migrationv1alpha1
 			return true, nil
 		}
 		ss.Status.PersistedStorageVersionHashes = []string{ss.Status.CurrentStorageVersionHash}
-		_, err = mt.client.MigrationV1alpha1().StorageStates().UpdateStatus(ss)
+		_, err = mt.client.MigrationV1alpha1().StorageStates().UpdateStatus(ctx, ss, metav1.UpdateOptions{})
 		if err != nil {
 			utilruntime.HandleError(err)
 			return false, nil
@@ -64,11 +65,11 @@ func (mt *MigrationTrigger) markStorageStateSucceeded(resource migrationv1alpha1
 	})
 }
 
-func (mt *MigrationTrigger) processMigration(m *migrationv1alpha1.StorageVersionMigration) error {
+func (mt *MigrationTrigger) processMigration(ctx context.Context, m *migrationv1alpha1.StorageVersionMigration) error {
 	klog.V(2).Infof("processing migration %#v", m)
 	switch {
 	case controller.HasCondition(m, migrationv1alpha1.MigrationSucceeded):
-		return mt.markStorageStateSucceeded(m.Spec.Resource)
+		return mt.markStorageStateSucceeded(ctx, m.Spec.Resource)
 	case controller.HasCondition(m, migrationv1alpha1.MigrationFailed):
 		// The migration controller should have already tried its best
 		// to complete the migration before marking the migration as
@@ -79,16 +80,16 @@ func (mt *MigrationTrigger) processMigration(m *migrationv1alpha1.StorageVersion
 	}
 }
 
-func (mt *MigrationTrigger) processQueue(obj interface{}) error {
+func (mt *MigrationTrigger) processQueue(ctx context.Context, obj interface{}) error {
 	item, ok := obj.(*queueItem)
 	if !ok {
 		return fmt.Errorf("expected queueItem, got %#v", reflect.TypeOf(obj))
 	}
 	// historic migrations are cleaned up when the controller observes
 	// storage version changes in the discovery doc.
-	m, err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Get(item.name, metav1.GetOptions{})
+	m, err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Get(ctx, item.name, metav1.GetOptions{})
 	if err == nil {
-		return mt.processMigration(m)
+		return mt.processMigration(ctx, m)
 	}
 
 	if err != nil && errors.IsNotFound(err) {

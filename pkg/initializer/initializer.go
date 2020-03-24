@@ -17,6 +17,7 @@ limitations under the License.
 package initializer
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -106,24 +107,24 @@ func migrationForResource(resource schema.GroupVersionResource) *migrationv1alph
 	}
 }
 
-func (init *initializer) initializeCRD() error {
+func (init *initializer) initializeCRD(ctx context.Context) error {
 	crdName := fmt.Sprintf("%s.%s", pluralCRDName, migrationv1alpha1.GroupName)
 	// check if crd already exists
-	_, err := init.crdClient.Get(crdName, metav1.GetOptions{})
+	_, err := init.crdClient.Get(ctx, crdName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 	if err != nil && errors.IsNotFound(err) {
-		_, err := init.crdClient.Create(migrationCRD())
+		_, err := init.crdClient.Create(ctx, migrationCRD(), metav1.CreateOptions{})
 		return err
 	}
 
 	// delete the crd, and wait for it's deletion
-	if err := init.crdClient.Delete(crdName, nil); err != nil {
+	if err := init.crdClient.Delete(ctx, crdName, metav1.DeleteOptions{}); err != nil {
 		return err
 	}
 	err = wait.PollImmediate(500*time.Millisecond, 30*time.Second, func() (bool, error) {
-		_, err := init.crdClient.Get(crdName, metav1.GetOptions{})
+		_, err := init.crdClient.Get(ctx, crdName, metav1.GetOptions{})
 		if err == nil {
 			return false, nil
 		}
@@ -135,24 +136,24 @@ func (init *initializer) initializeCRD() error {
 	if err != nil {
 		return err
 	}
-	_, err = init.crdClient.Create(migrationCRD())
+	_, err = init.crdClient.Create(ctx, migrationCRD(), metav1.CreateOptions{})
 	return err
 }
 
-func (init *initializer) Initialize() error {
+func (init *initializer) Initialize(ctx context.Context) error {
 	// TODO: remove deployment code.
-	if err := init.initializeCRD(); err != nil {
+	if err := init.initializeCRD(ctx); err != nil {
 		return err
 	}
 
 	// run discovery
-	resources, err := init.discovery.FindMigratableResources()
+	resources, err := init.discovery.FindMigratableResources(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, r := range resources {
-		if _, err := init.migrationClient.Create(migrationForResource(r)); err != nil {
+		if _, err := init.migrationClient.Create(ctx, migrationForResource(r), metav1.CreateOptions{}); err != nil {
 			return err
 		}
 	}

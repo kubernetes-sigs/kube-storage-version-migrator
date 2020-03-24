@@ -17,6 +17,7 @@ limitations under the License.
 package initializer
 
 import (
+	"context"
 	"strings"
 
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
@@ -67,12 +68,12 @@ var blackListResources = sets.NewString(
 //
 // TODO: if https://github.com/kubernetes/community/pull/2805 is realized,
 // refactor this method to build resource list accurately.
-func (d *migrationDiscovery) FindMigratableResources() ([]schema.GroupVersionResource, error) {
-	customGroups, err := d.findCustomGroups()
+func (d *migrationDiscovery) FindMigratableResources(ctx context.Context) ([]schema.GroupVersionResource, error) {
+	customGroups, err := d.findCustomGroups(ctx)
 	if err != nil {
 		return nil, err
 	}
-	aggregatedGroups, err := d.findAggregatedGroups()
+	aggregatedGroups, err := d.findAggregatedGroups(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,9 +124,9 @@ func (d *migrationDiscovery) FindMigratableResources() ([]schema.GroupVersionRes
 	return ret, nil
 }
 
-func (d *migrationDiscovery) findCustomGroups() (sets.String, error) {
+func (d *migrationDiscovery) findCustomGroups(ctx context.Context) (sets.String, error) {
 	ret := sets.NewString()
-	l, err := d.crdClient.List(metav1.ListOptions{})
+	l, err := d.crdClient.List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return ret, err
 	}
@@ -135,9 +136,9 @@ func (d *migrationDiscovery) findCustomGroups() (sets.String, error) {
 	return ret, nil
 }
 
-func (d *migrationDiscovery) findAggregatedGroups() (sets.String, error) {
+func (d *migrationDiscovery) findAggregatedGroups(ctx context.Context) (sets.String, error) {
 	ret := sets.NewString()
-	l, err := d.apiserviceClient.List(metav1.ListOptions{})
+	l, err := d.apiserviceClient.List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return ret, err
 	}

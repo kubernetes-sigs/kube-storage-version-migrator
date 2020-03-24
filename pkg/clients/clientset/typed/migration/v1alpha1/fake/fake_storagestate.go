@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -38,7 +40,7 @@ var storagestatesResource = schema.GroupVersionResource{Group: "migration.k8s.io
 var storagestatesKind = schema.GroupVersionKind{Group: "migration.k8s.io", Version: "v1alpha1", Kind: "StorageState"}
 
 // Get takes name of the storageState, and returns the corresponding storageState object, and an error if there is any.
-func (c *FakeStorageStates) Get(name string, options v1.GetOptions) (result *v1alpha1.StorageState, err error) {
+func (c *FakeStorageStates) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.StorageState, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootGetAction(storagestatesResource, name), &v1alpha1.StorageState{})
 	if obj == nil {
@@ -48,7 +50,7 @@ func (c *FakeStorageStates) Get(name string, options v1.GetOptions) (result *v1a
 }
 
 // List takes label and field selectors, and returns the list of StorageStates that match those selectors.
-func (c *FakeStorageStates) List(opts v1.ListOptions) (result *v1alpha1.StorageStateList, err error) {
+func (c *FakeStorageStates) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.StorageStateList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootListAction(storagestatesResource, storagestatesKind, opts), &v1alpha1.StorageStateList{})
 	if obj == nil {
@@ -69,13 +71,13 @@ func (c *FakeStorageStates) List(opts v1.ListOptions) (result *v1alpha1.StorageS
 }
 
 // Watch returns a watch.Interface that watches the requested storageStates.
-func (c *FakeStorageStates) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeStorageStates) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewRootWatchAction(storagestatesResource, opts))
 }
 
 // Create takes the representation of a storageState and creates it.  Returns the server's representation of the storageState, and an error, if there is any.
-func (c *FakeStorageStates) Create(storageState *v1alpha1.StorageState) (result *v1alpha1.StorageState, err error) {
+func (c *FakeStorageStates) Create(ctx context.Context, storageState *v1alpha1.StorageState, opts v1.CreateOptions) (result *v1alpha1.StorageState, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootCreateAction(storagestatesResource, storageState), &v1alpha1.StorageState{})
 	if obj == nil {
@@ -85,7 +87,7 @@ func (c *FakeStorageStates) Create(storageState *v1alpha1.StorageState) (result 
 }
 
 // Update takes the representation of a storageState and updates it. Returns the server's representation of the storageState, and an error, if there is any.
-func (c *FakeStorageStates) Update(storageState *v1alpha1.StorageState) (result *v1alpha1.StorageState, err error) {
+func (c *FakeStorageStates) Update(ctx context.Context, storageState *v1alpha1.StorageState, opts v1.UpdateOptions) (result *v1alpha1.StorageState, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootUpdateAction(storagestatesResource, storageState), &v1alpha1.StorageState{})
 	if obj == nil {
@@ -96,7 +98,7 @@ func (c *FakeStorageStates) Update(storageState *v1alpha1.StorageState) (result 
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeStorageStates) UpdateStatus(storageState *v1alpha1.StorageState) (*v1alpha1.StorageState, error) {
+func (c *FakeStorageStates) UpdateStatus(ctx context.Context, storageState *v1alpha1.StorageState, opts v1.UpdateOptions) (*v1alpha1.StorageState, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootUpdateSubresourceAction(storagestatesResource, "status", storageState), &v1alpha1.StorageState{})
 	if obj == nil {
@@ -106,22 +108,22 @@ func (c *FakeStorageStates) UpdateStatus(storageState *v1alpha1.StorageState) (*
 }
 
 // Delete takes name of the storageState and deletes it. Returns an error if one occurs.
-func (c *FakeStorageStates) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeStorageStates) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewRootDeleteAction(storagestatesResource, name), &v1alpha1.StorageState{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeStorageStates) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(storagestatesResource, listOptions)
+func (c *FakeStorageStates) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewRootDeleteCollectionAction(storagestatesResource, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.StorageStateList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched storageState.
-func (c *FakeStorageStates) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.StorageState, err error) {
+func (c *FakeStorageStates) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.StorageState, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootPatchSubresourceAction(storagestatesResource, name, pt, data, subresources...), &v1alpha1.StorageState{})
 	if obj == nil {
