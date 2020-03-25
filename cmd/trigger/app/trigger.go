@@ -11,9 +11,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/trigger"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
+	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/trigger"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/version"
 )
 
 const (

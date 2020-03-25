@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/klog"
 
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator/metrics"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/migrator/metrics"
 )
 
 var metadataAccessor = meta.NewAccessor()

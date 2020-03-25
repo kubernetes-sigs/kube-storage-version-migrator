@@ -17,9 +17,9 @@ limitations under the License.
 package controller
 
 import (
-	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 )
 
 func HasCondition(m *migrationv1alpha1.StorageVersionMigration, conditionType migrationv1alpha1.MigrationConditionType) bool {

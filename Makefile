@@ -24,20 +24,20 @@ test:
 .PHONY: all
 all:
 ifeq ($(WHAT),)
-	go install github.com/kubernetes-sigs/kube-storage-version-migrator/cmd/...
+	go install sigs.k8s.io/kube-storage-version-migrator/cmd/...
 else
-	go install github.com/kubernetes-sigs/kube-storage-version-migrator/$(WHAT)
+	go install sigs.k8s.io/kube-storage-version-migrator/$(WHAT)
 endif
 
 .PHONY: all-containers
 all-containers:
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/initializer/initializer ./cmd/initializer
+	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/initializer/initializer ./cmd/initializer
 	docker build --no-cache -t $(REGISTRY)/storage-version-migration-initializer:$(VERSION) cmd/initializer
 	rm cmd/initializer/initializer
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/migrator/migrator ./cmd/migrator
+	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/migrator/migrator ./cmd/migrator
 	docker build --no-cache -t $(REGISTRY)/storage-version-migration-migrator:$(VERSION) cmd/migrator
 	rm cmd/migrator/migrator
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/trigger/trigger ./cmd/trigger
+	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/trigger/trigger ./cmd/trigger
 	docker build --no-cache -t $(REGISTRY)/storage-version-migration-trigger:$(VERSION) cmd/trigger
 	rm cmd/trigger/trigger
 

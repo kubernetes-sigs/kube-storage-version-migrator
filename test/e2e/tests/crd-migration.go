@@ -5,10 +5,6 @@ import (
 	"os/exec"
 	"time"
 
-	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
-	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/test/e2e/util"
 	. "github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,6 +12,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/tools/clientcmd"
+	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/version"
+	"sigs.k8s.io/kube-storage-version-migrator/test/e2e/util"
 )
 
 const (

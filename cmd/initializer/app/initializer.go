@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/initializer"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/spf13/cobra"
 	crdclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	apiserviceclient "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
+	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/initializer"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/version"
 )
 
 const (

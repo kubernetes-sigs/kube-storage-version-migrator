@@ -23,13 +23,13 @@ import (
 	sync "sync"
 	time "time"
 
-	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
-	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/internalinterfaces"
-	migration "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/migration"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
+	clientset "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
+	internalinterfaces "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/informer/internalinterfaces"
+	migration "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/informer/migration"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.

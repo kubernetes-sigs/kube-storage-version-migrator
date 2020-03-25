@@ -1,4 +1,4 @@
-module github.com/kubernetes-sigs/kube-storage-version-migrator
+module sigs.k8s.io/kube-storage-version-migrator
 
 go 1.13
 

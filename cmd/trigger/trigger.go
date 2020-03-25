@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/cmd/trigger/app"
 	"github.com/spf13/pflag"
 	"k8s.io/klog"
+	"sigs.k8s.io/kube-storage-version-migrator/cmd/trigger/app"
 )
 
 func main() {

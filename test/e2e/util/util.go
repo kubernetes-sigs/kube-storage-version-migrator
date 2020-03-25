@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/test/e2e/util/ginkgowrapper"
 	. "github.com/onsi/ginkgo"
+	"sigs.k8s.io/kube-storage-version-migrator/test/e2e/util/ginkgowrapper"
 )
 
 func nowStamp() string {

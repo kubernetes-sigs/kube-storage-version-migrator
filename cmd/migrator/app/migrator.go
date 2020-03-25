@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"os"
 
-	migrationclient "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/controller"
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/controller"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/version"
 )
 
 const (
