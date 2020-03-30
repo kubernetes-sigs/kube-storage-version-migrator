@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"os/exec"
 	"time"
 
@@ -46,6 +47,7 @@ func storageVersionHash(d discovery.DiscoveryInterface, groupversion, resource s
 
 var _ = Describe("storage version migrator", func() {
 	It("should migrate CRD", func() {
+		ctx := context.TODO()
 		setupMigrator()
 		cfg, err := clientcmd.BuildConfigFromFlags("", "/workspace/.kube/config")
 		if err != nil {
@@ -75,7 +77,7 @@ var _ = Describe("storage version migrator", func() {
 		}
 		By("Wait for storage states to be created")
 		err = wait.PollImmediate(10*time.Second, 1*time.Minute, func() (bool, error) {
-			l, err := client.MigrationV1alpha1().StorageStates().List(metav1.ListOptions{})
+			l, err := client.MigrationV1alpha1().StorageStates().List(ctx, metav1.ListOptions{})
 			if err != nil {
 				util.Failf("%v", err)
 			}
@@ -92,7 +94,7 @@ var _ = Describe("storage version migrator", func() {
 		var crdStorageState *migrationv1alpha1.StorageState
 		err = wait.PollImmediate(10*time.Second, 1*time.Minute, func() (bool, error) {
 			var err error
-			crdStorageState, err = client.MigrationV1alpha1().StorageStates().Get("tests.migrationtest.k8s.io", metav1.GetOptions{})
+			crdStorageState, err = client.MigrationV1alpha1().StorageStates().Get(ctx, "tests.migrationtest.k8s.io", metav1.GetOptions{})
 			if err != nil && !errors.IsNotFound(err) {
 				util.Failf("%v", err)
 			}
@@ -136,7 +138,7 @@ var _ = Describe("storage version migrator", func() {
 		// Wait for discoveryPeriod + 1 minute to give the triggering controller enough time to detect and react.
 		err = wait.PollImmediate(10*time.Second, discoveryPeriod+1*time.Minute, func() (bool, error) {
 			var err error
-			crdStorageState, err = client.MigrationV1alpha1().StorageStates().Get("tests.migrationtest.k8s.io", metav1.GetOptions{})
+			crdStorageState, err = client.MigrationV1alpha1().StorageStates().Get(ctx, "tests.migrationtest.k8s.io", metav1.GetOptions{})
 			if err != nil {
 				util.Failf("%v", err)
 			}
@@ -151,7 +153,7 @@ var _ = Describe("storage version migrator", func() {
 
 		By("Wait for all storage states to converge")
 		err = wait.PollImmediate(30*time.Second, 10*time.Minute, func() (bool, error) {
-			l, err := client.MigrationV1alpha1().StorageStates().List(metav1.ListOptions{})
+			l, err := client.MigrationV1alpha1().StorageStates().List(ctx, metav1.ListOptions{})
 			if err != nil {
 				util.Failf("%v", err)
 			}
@@ -172,7 +174,7 @@ var _ = Describe("storage version migrator", func() {
 		}
 
 		By("Migrations should have all completed")
-		l, err := client.MigrationV1alpha1().StorageVersionMigrations().List(metav1.ListOptions{})
+		l, err := client.MigrationV1alpha1().StorageVersionMigrations().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			util.Failf("%v", err)
 		}
