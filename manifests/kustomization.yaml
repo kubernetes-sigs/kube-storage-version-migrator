@@ -1,5 +1,6 @@
 resources:
 - namespace-rbac.yaml
-- crd.yaml
 - trigger.yaml
 - migrator.yaml
+- storage_migration_crd.yaml
+- storage_state_crd.yaml
