@@ -3,7 +3,7 @@ package tests
 import (
 	"os/exec"
 
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/test/e2e/util"
+	"sigs.k8s.io/kube-storage-version-migrator/test/e2e/util"
 )
 
 func setupMigrator() {

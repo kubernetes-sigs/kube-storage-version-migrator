@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/migrator/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	ptype "github.com/prometheus/client_model/go"
 	v1 "k8s.io/api/core/v1"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	clitesting "k8s.io/client-go/testing"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/migrator/metrics"
 )
 
 func newPod(name, namespace string) v1.Pod {

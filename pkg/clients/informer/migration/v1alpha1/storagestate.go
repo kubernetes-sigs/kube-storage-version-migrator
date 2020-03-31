@@ -22,14 +22,14 @@ import (
 	"context"
 	time "time"
 
-	migrationv1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
-	clientset "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/clientset"
-	internalinterfaces "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/informer/internalinterfaces"
-	v1alpha1 "github.com/kubernetes-sigs/kube-storage-version-migrator/pkg/clients/lister/migration/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
+	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	clientset "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
+	internalinterfaces "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/informer/internalinterfaces"
+	v1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/lister/migration/v1alpha1"
 )
 
 // StorageStateInformer provides access to a shared informer and lister for

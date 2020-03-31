@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-THIS_REPO="github.com/kubernetes-sigs/kube-storage-version-migrator"
+THIS_REPO="sigs.k8s.io/kube-storage-version-migrator"
 API_PKG="${THIS_REPO}/pkg/apis/migration/v1alpha1"
 # Absolute path to this repo
 THIS_REPO_ABSOLUTE="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"

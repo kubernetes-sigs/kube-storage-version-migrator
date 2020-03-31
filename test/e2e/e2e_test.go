@@ -19,9 +19,9 @@ package e2e
 import (
 	"testing"
 
-	_ "github.com/kubernetes-sigs/kube-storage-version-migrator/test/e2e/tests"
 	"github.com/onsi/ginkgo"
 	"k8s.io/klog"
+	_ "sigs.k8s.io/kube-storage-version-migrator/test/e2e/tests"
 )
 
 func TestE2E(t *testing.T) {
