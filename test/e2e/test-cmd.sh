@@ -120,6 +120,15 @@ cleanup() {
 
 trap cleanup EXIT
 
+failure() {
+  local lineno=$1
+  local msg=$2
+  echo "Failed at $lineno: $msg"
+}
+
+trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
+
+
 # Sanity check.
 # Note that the log inidicates that the kubectl in the test driver is v1.10.7
 kubectl version
