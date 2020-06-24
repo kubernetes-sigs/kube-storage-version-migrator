@@ -91,7 +91,7 @@ function wait-for-migration()
 verify-version()
 {
   version=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-    "docker exec $1 /bin/sh -c \"ETCDCTL_API=3 etcdctl ${TLS_ARGS} get /registry/controllerrevisions/default/sample\" | grep -a apps")
+    "sudo crictl exec $1 /bin/sh -c \"ETCDCTL_API=3 etcdctl ${TLS_ARGS} get /registry/controllerrevisions/default/sample\" | grep -a apps")
   # Remove the trailing non-printable character. The data is encoded in proto, so
   # it has non-printable characters.
   version=$(tr -dc '[[:print:]]' <<< "${version}")
@@ -120,6 +120,15 @@ cleanup() {
 
 trap cleanup EXIT
 
+failure() {
+  local lineno=$1
+  local msg=$2
+  echo "Failed at $lineno: $msg"
+}
+
+trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
+
+
 # Sanity check.
 # Note that the log inidicates that the kubectl in the test driver is v1.10.7
 kubectl version
@@ -139,17 +148,19 @@ user_name=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" 
 gcloud compute scp "${MIGRATORROOT}/test/e2e/${TESTFILE}" "${user_name}@${CLUSTER_NAME}-master:~/" --project "${PROJECT}" --zone "${KUBE_GCE_ZONE}"
 
 # Get the etcd container ID.
-result=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-  "docker ps")
-etcd_container=$(echo "${result}" | grep "etcd-server-${CLUSTER_NAME}-master" | grep -v pause | cut -d ' ' -f 1)
+podID=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+  "sudo crictl pods -q --name=etcd-server-${CLUSTER_NAME}-master")
+containers=$(gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
+    "sudo crictl ps -p ${podID}")
+etcd_container=$(echo "${containers}" | grep -v CONTAINER | cut -d ' ' -f 1)
 
-# Copy the proto file to the etcd container
+# The host path "/mnt/disks/master-pd/var/etcd" is mounted as "/var/etcd" in the
+# etcd container. 
 gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-  "docker cp ${TESTFILE} ${etcd_container}:/"
-
+  "sudo cp /home/prow/${TESTFILE} /mnt/disks/master-pd/var/etcd"
 # Create the object via etcdctl
 gcloud compute --project "${PROJECT}" ssh --zone "${KUBE_GCE_ZONE}" "${CLUSTER_NAME}-master" --command \
-  "docker exec ${etcd_container} /bin/sh -c \"cat /${TESTFILE} | ETCDCTL_API=3 etcdctl ${TLS_ARGS} put /registry/controllerrevisions/default/sample\""
+  "sudo crictl exec ${etcd_container} /bin/sh -c \"ETCDCTL_API=3 etcdctl ${TLS_ARGS} put /registry/controllerrevisions/default/sample < /var/etcd/${TESTFILE}\""
 
 #TODO: remove
 # Verify that the ControllerRevision is encoded as apps/v1beta2.
