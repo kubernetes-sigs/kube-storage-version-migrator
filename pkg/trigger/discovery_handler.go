@@ -179,7 +179,7 @@ func (mt *MigrationTrigger) staleStorageState(ss *migrationv1alpha1.StorageState
 func (mt *MigrationTrigger) processDiscoveryResource(ctx context.Context, r metav1.APIResource) {
 	klog.V(4).Infof("processing %#v", r)
 	if r.StorageVersionHash == "" {
-		klog.V(2).Infof("ignored resource %s because its storageVersionHash is empty", r.Name)
+		klog.V(2).Infof("ignored resource %s/%s because its storageVersionHash is empty", r.Group, r.Name)
 		return
 	}
 	ss, getErr := mt.client.MigrationV1alpha1().StorageStates().Get(ctx, storageStateName(toGroupResource(r)), metav1.GetOptions{})
