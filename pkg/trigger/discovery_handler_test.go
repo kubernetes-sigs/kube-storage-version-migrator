@@ -28,6 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/discovery"
+	fakediscovery "k8s.io/client-go/discovery/fake"
 	core "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 
@@ -371,4 +373,60 @@ func verifyStorageStateUpdate(t *testing.T, a core.Action, expectedHeartbeat met
 	if a, e := ss.Status.PersistedStorageVersionHashes, expectedPersistedHashes; !reflect.DeepEqual(a, e) {
 		t.Fatalf("expected hashes %v, got %v", e, a)
 	}
+}
+
+// FakeClientset wraps the generated fake Clientset and overrides the Discovery interface
+type FakeClientset struct {
+	*fake.Clientset
+}
+
+func (f *FakeClientset) Discovery() discovery.DiscoveryInterface {
+	return &FakeDiscovery{FakeDiscovery: f.Clientset.Discovery().(*fakediscovery.FakeDiscovery)}
+}
+
+// FakeDiscovery wraps the client-go FakeDiscovery and overrides the ServerPreferredResources method
+type FakeDiscovery struct {
+	*fakediscovery.FakeDiscovery
+}
+
+func (f *FakeDiscovery) ServerPreferredResources() ([]*metav1.APIResourceList, error) {
+	failedGroups := make(map[schema.GroupVersion]error)
+	gv := schema.GroupVersion{Group: "test.k8s.io", Version: "v1"}
+	failedGroups[gv] = fmt.Errorf("test partial discovery failure")
+	return []*metav1.APIResourceList{
+		{
+			APIResources: []metav1.APIResource{newAPIResource()},
+		},
+	}, &discovery.ErrGroupDiscoveryFailed{Groups: failedGroups}
+
+}
+
+func TestProcessDiscoveryPartialFailure(t *testing.T) {
+	client := fake.NewSimpleClientset(newMigrationList())
+	// overrides the ServerPreferredResources method of the simple clientset
+	trigger := NewMigrationTrigger(&FakeClientset{Clientset: client})
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go trigger.migrationInformer.Run(stopCh)
+	if !cache.WaitForCacheSync(stopCh, trigger.migrationInformer.HasSynced) {
+		utilruntime.HandleError(fmt.Errorf("Unable to sync caches"))
+		return
+	}
+	trigger.heartbeat = metav1.Now()
+	// let trigger controller invokes ServerPreferredResources method to discover
+	// the API resources
+	trigger.processDiscovery(context.TODO())
+	actions := client.Actions()
+	verifyCleanupAndLaunch(t, actions[3:7])
+
+	c, ok := actions[8].(core.CreateAction)
+	if !ok {
+		t.Fatalf("expected create action")
+	}
+	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storagestates"}
+	if c.GetResource() != r {
+		t.Fatalf("unexpected resource %v", c.GetResource())
+	}
+
+	verifyStorageStateUpdate(t, actions[9], trigger.heartbeat, newAPIResource().StorageVersionHash, []string{v1alpha1.Unknown})
 }
