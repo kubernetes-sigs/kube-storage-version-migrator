@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/discovery"
 	"k8s.io/klog"
 
 	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
@@ -44,8 +45,13 @@ func (mt *MigrationTrigger) processDiscovery(ctx context.Context) {
 		return true, nil
 	})
 	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("Abort processing discovery document: %v", err))
-		return
+		if discovery.IsGroupDiscoveryFailedError(err2) {
+			// process the partial discovery result, and update the heartbeat for
+			// resources that do have a valid discovery document
+			klog.Warningf("failed to discover some groups: %v; processing partial result", err2.(*discovery.ErrGroupDiscoveryFailed).Groups)
+		} else {
+			klog.Warningf("failed to discover preferred resources: %v", err2)
+		}
 	}
 	mt.heartbeat = metav1.Now()
 	for _, l := range resources {
