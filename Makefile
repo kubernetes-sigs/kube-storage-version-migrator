@@ -13,6 +13,7 @@
 # limitations under the License.
 
 REGISTRY ?= gcr.io/google-containers
+STAGING_REGISTRY := gcr.io/k8s-staging-storage-migrator
 VERSION ?= v0.1
 NAMESPACE ?= kube-system
 DELETE ?= "gcloud container images delete"
@@ -58,6 +59,16 @@ push-all: all-containers
 	docker push $(REGISTRY)/storage-version-migration-initializer:$(VERSION)
 	docker push $(REGISTRY)/storage-version-migration-migrator:$(VERSION)
 	docker push $(REGISTRY)/storage-version-migration-trigger:$(VERSION)
+
+.PHONY: release-staging release-alias-tag
+release-staging: ## Builds and push container images to the staging bucket.
+	REGISTRY=$(STAGING_REGISTRY) $(MAKE) push-all release-alias-tag
+
+.PHONY: release-alias-tag
+release-alias-tag: # Adds the tag to the last build tag. BASE_REF comes from the cloudbuild.yaml
+	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-initializer:$(VERSION) $(REGISTRY)/storage-version-migration-initializer:$(BASE_REF)
+	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-migrator:$(VERSION) $(REGISTRY)/storage-version-migration-migrator:$(BASE_REF)
+	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-trigger:$(VERSION) $(REGISTRY)/storage-version-migration-trigger:$(BASE_REF)
 
 .PHONY: delete-all-images
 delete-all-images:
