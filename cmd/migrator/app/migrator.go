@@ -43,6 +43,10 @@ func NewMigratorCommand() *cobra.Command {
 
 func Run(ctx context.Context) error {
 	http.Handle("/metrics", promhttp.Handler())
+	livenessHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "ok")
+	})
+	http.HandleFunc("/healthz", livenessHandler)
 	go func() { http.ListenAndServe(":2112", nil) }()
 
 	var err error

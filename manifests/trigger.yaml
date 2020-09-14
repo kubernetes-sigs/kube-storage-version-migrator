@@ -18,3 +18,10 @@ spec:
       containers:
       - name: trigger
         image: REGISTRY/storage-version-migration-trigger:VERSION
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            port: 2113
+            path: /healthz
+          initialDelaySeconds: 10
+          timeoutSeconds: 60
