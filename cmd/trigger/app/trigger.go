@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,12 @@ func NewTriggerCommand() *cobra.Command {
 }
 
 func Run(ctx context.Context) error {
+	livenessHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "ok")
+	})
+	http.HandleFunc("/healthz", livenessHandler)
+	go func() { http.ListenAndServe(":2113", nil) }()
+
 	var err error
 	var config *rest.Config
 	if *kubeconfigPath != "" {

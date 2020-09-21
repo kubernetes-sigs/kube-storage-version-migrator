@@ -24,3 +24,10 @@ spec:
           - --alsologtostderr
           - --kube-api-qps=40
           - --kube-api-burst=1000
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            port: 2112
+            path: /healthz
+          initialDelaySeconds: 10
+          timeoutSeconds: 60
