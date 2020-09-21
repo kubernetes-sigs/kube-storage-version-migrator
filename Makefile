@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-REGISTRY ?= gcr.io/google-containers
+REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
 STAGING_REGISTRY := gcr.io/k8s-staging-storage-migrator
 VERSION ?= v0.1
 NAMESPACE ?= kube-system

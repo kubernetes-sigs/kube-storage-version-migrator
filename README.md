@@ -21,3 +21,19 @@ You can reach the maintainers of this project at:
 ### Code of conduct
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
+
+## Build
+
+Please make sure you have the REGISTRY environment variable set.
+For local builds it can be set to anything.
+For image builds it determines the location of your image.
+The REGISTRY defaults to `gcr.io/$(shell gcloud config get-value project)`.
+
+## Published images
+
+Alternatively, you can use the published images in your manifests. The latest
+images are pushed to the following Kubernetes production repos:
+
+- us.gcr.io/k8s-artifacts-prod/storage-migrator
+- eu.gcr.io/k8s-artifacts-prod/storage-migrator
+- asia.gcr.io/k8s-artifacts-prod/storage-migrator
