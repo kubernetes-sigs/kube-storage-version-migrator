@@ -16,7 +16,7 @@ require (
 	k8s.io/apimachinery v0.18.0-beta.2
 	k8s.io/client-go v0.18.0-beta.2
 	k8s.io/code-generator v0.18.0-beta.2
-	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.4.0
 	k8s.io/kube-aggregator v0.18.0-beta.2
 	sigs.k8s.io/controller-tools v0.2.8
 )
