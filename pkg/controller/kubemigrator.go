@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
 	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/migrator"

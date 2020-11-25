@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/onsi/ginkgo"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	_ "sigs.k8s.io/kube-storage-version-migrator/test/e2e/tests"
 )
 
