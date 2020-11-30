@@ -255,7 +255,7 @@ func TestMetrics(t *testing.T) {
 	metrics.Metrics.Reset()
 	// fake client doesn't support pagination, so we can't test complex behavior.
 	nodeList := newNodeList(100)
-	client := fake.NewSimpleDynamicClient(scheme.Scheme, toUnstructuredListOrDie(nodeList))
+	client := fake.NewSimpleDynamicClient(scheme.Scheme, &nodeList)
 	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("nodes"), client, &fakeProgress{})
 	ctx := context.TODO()
 	migrator.Run(ctx)
