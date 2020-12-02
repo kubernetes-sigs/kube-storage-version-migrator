@@ -34,6 +34,7 @@ import (
 )
 
 func (mt *MigrationTrigger) processDiscovery(ctx context.Context) {
+	// TODO(roycaihw): test prow job
 	var resources []*metav1.APIResourceList
 	var err2 error
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
