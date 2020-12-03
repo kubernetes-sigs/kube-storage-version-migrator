@@ -315,6 +315,8 @@ k8s.io/client-go/discovery
 k8s.io/client-go/discovery/fake
 k8s.io/client-go/dynamic
 k8s.io/client-go/dynamic/fake
+k8s.io/client-go/informers/apiserverinternal/v1alpha1
+k8s.io/client-go/informers/internalinterfaces
 k8s.io/client-go/kubernetes
 k8s.io/client-go/kubernetes/fake
 k8s.io/client-go/kubernetes/scheme
@@ -404,6 +406,7 @@ k8s.io/client-go/kubernetes/typed/storage/v1alpha1
 k8s.io/client-go/kubernetes/typed/storage/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/storage/v1beta1
 k8s.io/client-go/kubernetes/typed/storage/v1beta1/fake
+k8s.io/client-go/listers/apiserverinternal/v1alpha1
 k8s.io/client-go/pkg/apis/clientauthentication
 k8s.io/client-go/pkg/apis/clientauthentication/v1alpha1
 k8s.io/client-go/pkg/apis/clientauthentication/v1beta1
