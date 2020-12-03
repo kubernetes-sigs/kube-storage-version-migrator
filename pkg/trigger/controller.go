@@ -22,9 +22,12 @@ import (
 	"reflect"
 	"time"
 
+	apiserverinternalv1alpha1 "k8s.io/api/apiserverinternal/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	apiserverinternalinformers "k8s.io/client-go/informers/apiserverinternal/v1alpha1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
@@ -47,24 +50,39 @@ const (
 )
 
 type MigrationTrigger struct {
-	client            migrationclient.Interface
-	migrationInformer cache.SharedIndexInformer
-	queue             workqueue.RateLimitingInterface
+	client                 migrationclient.Interface
+	kubeClient             kubernetes.Interface
+	migrationInformer      cache.SharedIndexInformer
+	storageVersionInformer cache.SharedIndexInformer
+	queue                  workqueue.RateLimitingInterface
+	storageVersionQueue    workqueue.RateLimitingInterface
 	// The timestamp of last time discovery is performed.
 	heartbeat metav1.Time
+
+	lastSeenTransitionTime map[string]metav1.Time
 }
 
-func NewMigrationTrigger(c migrationclient.Interface) *MigrationTrigger {
+func NewMigrationTrigger(c migrationclient.Interface, kubeClient kubernetes.Interface) *MigrationTrigger {
 	mt := &MigrationTrigger{
-		client: c,
+		client:     c,
+		kubeClient: kubeClient,
 		// TODO: share one with the kubemigrator.go.
 		migrationInformer: controller.NewStatusAndResourceIndexedInformer(c),
-		queue:             workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "migration_triggering_controller"),
+		storageVersionInformer: apiserverinternalinformers.NewStorageVersionInformer(kubeClient,
+			0,
+			cache.Indexers{}),
+		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "migration_triggering_controller"),
+		storageVersionQueue:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "migration_triggering_controller_storage_version"),
+		lastSeenTransitionTime: make(map[string]metav1.Time),
 	}
 	mt.migrationInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    mt.addResource,
 		UpdateFunc: mt.updateResource,
 		DeleteFunc: mt.deleteResource,
+	})
+	mt.storageVersionInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    mt.addStorageVersion,
+		UpdateFunc: mt.updateStorageVersion,
 	})
 
 	return mt
@@ -76,6 +94,22 @@ func (mt *MigrationTrigger) dequeue() <-chan interface{} {
 		for {
 			item, quit := mt.queue.Get()
 			if quit {
+				close(work)
+				return
+			}
+			work <- item
+		}
+	}()
+	return work
+}
+
+func (mt *MigrationTrigger) dequeueStorageVersion() <-chan interface{} {
+	work := make(chan interface{})
+	go func() {
+		for {
+			item, quit := mt.storageVersionQueue.Get()
+			if quit {
+				close(work)
 				return
 			}
 			work <- item
@@ -133,14 +167,33 @@ func (mt *MigrationTrigger) enqueueResource(migration *migrationv1alpha1.Storage
 	mt.queue.Add(it)
 }
 
+func (mt *MigrationTrigger) addStorageVersion(obj interface{}) {
+	sv, ok := obj.(*apiserverinternalv1alpha1.StorageVersion)
+	if !ok {
+		utilruntime.HandleError(fmt.Errorf("expected StorageVersion, got %#v", reflect.TypeOf(obj)))
+		return
+	}
+	mt.enqueueStorageVersion(sv)
+}
+
+func (mt *MigrationTrigger) updateStorageVersion(_ interface{}, obj interface{}) {
+	mt.addStorageVersion(obj)
+}
+
+func (mt *MigrationTrigger) enqueueStorageVersion(sv *apiserverinternalv1alpha1.StorageVersion) {
+	mt.storageVersionQueue.Add(sv.Name)
+}
+
 func (mt *MigrationTrigger) Run(ctx context.Context) {
 	defer utilruntime.HandleCrash()
 	go mt.migrationInformer.Run(ctx.Done())
-	if !cache.WaitForCacheSync(ctx.Done(), mt.migrationInformer.HasSynced) {
+	go mt.storageVersionInformer.Run(ctx.Done())
+	if !cache.WaitForCacheSync(ctx.Done(), mt.migrationInformer.HasSynced, mt.storageVersionInformer.HasSynced) {
 		utilruntime.HandleError(fmt.Errorf("Unable to sync caches"))
 		return
 	}
 	work := mt.dequeue()
+	workStorageVersion := mt.dequeueStorageVersion()
 
 	// We need to run the discovery routine and the migration management
 	// routine in serial. Otherwise, they can corrupt
@@ -164,22 +217,30 @@ func (mt *MigrationTrigger) Run(ctx context.Context) {
 	//
 	// TODO: if we let the migration note down the currentStorageVersion,
 	// we can avoid the race.
-	ticker := time.NewTicker(discoveryPeriod)
-	// Do a discovery once started.
-	mt.processDiscovery(ctx)
+
+	mt.heartbeat = metav1.Now()
 	for {
 		select {
-		case <-ticker.C:
-			mt.processDiscovery(ctx)
+		case wSV := <-workStorageVersion:
+			err := mt.processStorageVersionQueue(ctx, wSV.(string))
+			if err == nil {
+				mt.storageVersionQueue.Forget(wSV)
+				mt.storageVersionQueue.Done(wSV)
+				break
+			}
+			utilruntime.HandleError(fmt.Errorf("failed to process storage version %v: %v", wSV, err))
+			mt.storageVersionQueue.AddRateLimited(wSV)
+			mt.storageVersionQueue.Done(wSV)
 		case w := <-work:
-			defer mt.queue.Done(w)
 			err := mt.processQueue(ctx, w)
 			if err == nil {
 				mt.queue.Forget(w)
+				mt.queue.Done(w)
 				break
 			}
 			utilruntime.HandleError(fmt.Errorf("failed to process %v: %v", w, err))
 			mt.queue.AddRateLimited(w)
+			mt.queue.Done(w)
 		case <-ctx.Done():
 			return
 		}

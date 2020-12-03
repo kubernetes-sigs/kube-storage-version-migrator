@@ -14,6 +14,9 @@ rules:
 - apiGroups: ["migration.k8s.io"]
   resources: ["storageversionmigrations"]
   verbs: ["watch", "get", "list", "delete", "create"]
+- apiGroups: ["internal.apiserver.k8s.io"]
+  resources: ["storageversions"]
+  verbs: ["watch", "get", "list"]
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
