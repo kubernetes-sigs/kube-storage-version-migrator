@@ -9,7 +9,7 @@ metadata:
   name: storage-version-migration-trigger
 rules:
 - apiGroups: ["migration.k8s.io"]
-  resources: ["storagestates"]
+  resources: ["storagestates", "storagestates/status"]
   verbs: ["watch", "get", "list", "delete", "create", "update"]
 - apiGroups: ["migration.k8s.io"]
   resources: ["storageversionmigrations"]
