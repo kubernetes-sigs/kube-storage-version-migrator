@@ -57,7 +57,7 @@ func Run(ctx context.Context) error {
 	}
 	init := initializer.NewInitializer(
 		clientset.Discovery(),
-		crd.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		crd.ApiextensionsV1().CustomResourceDefinitions(),
 		apiservice.ApiregistrationV1().APIServices(),
 		clientset.CoreV1().Namespaces(),
 		migration.MigrationV1alpha1(),
