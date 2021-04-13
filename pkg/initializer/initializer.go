@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"time"
 
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -36,14 +36,14 @@ import (
 
 type initializer struct {
 	discovery       *migrationDiscovery
-	crdClient       v1beta1.CustomResourceDefinitionInterface
+	crdClient       apiextensionsv1.CustomResourceDefinitionInterface
 	namespaceClient corev1.NamespaceInterface
 	migrationClient v1alpha1.StorageVersionMigrationInterface
 }
 
 func NewInitializer(
 	disocveryClient discovery.ServerResourcesInterface,
-	crdClient v1beta1.CustomResourceDefinitionInterface,
+	crdClient apiextensionsv1.CustomResourceDefinitionInterface,
 	apiserviceClient apiregistrationv1.APIServiceInterface,
 	namespaceClient corev1.NamespaceInterface,
 	migrationGetter v1alpha1.StorageVersionMigrationsGetter,
@@ -64,23 +64,125 @@ const (
 	listKind        = "StorageVersionMigrationList"
 )
 
-func migrationCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-	return &apiextensionsv1beta1.CustomResourceDefinition{
+func migrationCRD() *v1.CustomResourceDefinition {
+	return &v1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s.%s", pluralCRDName, migrationv1alpha1.GroupName),
+			Name: "storageversionmigrations.migration.k8s.io",
+			Annotations: map[string]string{
+				"api-approved.kubernetes.io": "https://github.com/kubernetes/community/pull/2524",
+			},
 		},
-		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   migrationv1alpha1.GroupName,
-			Version: migrationv1alpha1.SchemeGroupVersion.Version,
-			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+		Spec: v1.CustomResourceDefinitionSpec{
+			Group: "migration.k8s.io",
+			Names: v1.CustomResourceDefinitionNames{
 				Plural:   pluralCRDName,
 				Singular: singularCRDName,
 				Kind:     kind,
 				ListKind: listKind,
 			},
-			Scope: apiextensionsv1beta1.ClusterScoped,
-			Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
-				Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
+			Scope: v1.ClusterScoped,
+			Versions: []v1.CustomResourceDefinitionVersion{
+				{
+					Name:    "v1alpha1",
+					Served:  true,
+					Storage: true,
+					Subresources: &v1.CustomResourceSubresources{
+						Status: &v1.CustomResourceSubresourceStatus{},
+					},
+					Schema: &v1.CustomResourceValidation{
+						OpenAPIV3Schema: &v1.JSONSchemaProps{
+							Description: "StorageVersionMigration represents a migration of stored data to the latest storage version.",
+							Type:        "object",
+							Properties: map[string]v1.JSONSchemaProps{
+								"apiVersion": v1.JSONSchemaProps{
+									Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+									Type:        "string",
+								},
+								"kind": v1.JSONSchemaProps{
+									Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+									Type:        "string",
+								},
+								"metadata": v1.JSONSchemaProps{
+									Type: "object",
+								},
+								"spec": v1.JSONSchemaProps{
+									Description: "Specification of the migration.",
+									Type:        "object",
+									Required: []string{
+										"resource",
+									},
+									Properties: map[string]v1.JSONSchemaProps{
+										"continueToken": v1.JSONSchemaProps{
+											Description: "The token used in the list options to get the next chunk of objects to migrate. When the .status.conditions indicates the migration is \"Running\", users can use this token to check the progress of the migration.",
+											Type:        "string",
+										},
+										"resource": v1.JSONSchemaProps{
+											Description: "The resource that is being migrated. The migrator sends requests to the endpoint serving the resource. Immutable.",
+											Type:        "object",
+											Properties: map[string]v1.JSONSchemaProps{
+												"group": v1.JSONSchemaProps{
+													Description: "The name of the group.",
+													Type:        "string",
+												},
+												"resource": v1.JSONSchemaProps{
+													Description: "The name of the resource.",
+													Type:        "string",
+												},
+												"version": v1.JSONSchemaProps{
+													Description: "The name of the version.",
+													Type:        "string",
+												},
+											},
+										},
+									},
+								},
+								"status": v1.JSONSchemaProps{
+									Description: "Status of the migration.",
+									Type:        "object",
+									Properties: map[string]v1.JSONSchemaProps{
+										"conditions": v1.JSONSchemaProps{
+											Description: "The latest available observations of the migration's current state.",
+											Type:        "array",
+											Items: &v1.JSONSchemaPropsOrArray{
+												Schema: &v1.JSONSchemaProps{
+													Description: "Describes the state of a migration at a certain point.",
+													Type:        "object",
+													Required: []string{
+														"status",
+														"type",
+													},
+													Properties: map[string]v1.JSONSchemaProps{
+														"lastUpdateTime": v1.JSONSchemaProps{
+															Description: "The last time this condition was updated.",
+															Type:        "string",
+															Format:      "date-time",
+														},
+														"message": v1.JSONSchemaProps{
+															Description: "A human readable message indicating details about the transition.",
+															Type:        "string",
+														},
+														"reason": v1.JSONSchemaProps{
+															Description: "The reason for the condition's last transition.",
+															Type:        "string",
+														},
+														"status": v1.JSONSchemaProps{
+															Description: "Status of the condition, one of True, False, Unknown.",
+															Type:        "string",
+														},
+														"type": v1.JSONSchemaProps{
+															Description: "Type of the condition.",
+															Type:        "string",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}

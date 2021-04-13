@@ -282,9 +282,9 @@ func apiserverRestartsFunc() {
 		// "capped at five minutes, and is reset after ten minutes of
 		// successful execution".
 		err = wait.PollImmediate(10*time.Second, 6*time.Minute, func() (bool, error) {
-			output, err := exec.Command("kubectl", "version").CombinedOutput()
-			if err != nil {
-				util.Logf("%s", output)
+			output, err := exec.Command("kubectl", "get", "--raw=/readyz").CombinedOutput()
+			if string(output) != "ok" {
+				util.Logf("apiserver not ready yet, output=%q, err=%v", output, err)
 				return false, nil
 			}
 			return true, nil

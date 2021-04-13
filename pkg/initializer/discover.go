@@ -20,7 +20,7 @@ import (
 	"context"
 	"strings"
 
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -31,14 +31,14 @@ import (
 
 type migrationDiscovery struct {
 	discoveryClient  discovery.ServerResourcesInterface
-	crdClient        v1beta1.CustomResourceDefinitionInterface
+	crdClient        v1.CustomResourceDefinitionInterface
 	apiserviceClient apiregistrationv1.APIServiceInterface
 }
 
 // NewDiscovery returns a migrationDiscovery struct.
 func NewDiscovery(
 	discoveryClient discovery.ServerResourcesInterface,
-	crdClient v1beta1.CustomResourceDefinitionInterface,
+	crdClient v1.CustomResourceDefinitionInterface,
 	apiserviceClient apiregistrationv1.APIServiceInterface,
 ) *migrationDiscovery {
 	return &migrationDiscovery{

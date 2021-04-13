@@ -22,13 +22,13 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
+	v1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	aggregatorfake "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/fake"
 )
 
@@ -322,7 +322,7 @@ func fakeAPIResourceLists(t *testing.T) []*metav1.APIResourceList {
 }
 
 func fakeCRDs(t *testing.T) []runtime.Object {
-	c := &v1beta1.CustomResourceDefinition{}
+	c := &apiextensionsv1.CustomResourceDefinition{}
 	err := json.Unmarshal([]byte(crd), c)
 	if err != nil {
 		t.Fatal(err)
@@ -347,7 +347,7 @@ func TestFindMigratableResources(t *testing.T) {
 	kubernetes := fake.NewSimpleClientset()
 	kubernetes.Fake.Resources = fakeAPIResourceLists(t)
 
-	crdClient := apiextensionsfake.NewSimpleClientset(fakeCRDs(t)...).ApiextensionsV1beta1().CustomResourceDefinitions()
+	crdClient := apiextensionsfake.NewSimpleClientset(fakeCRDs(t)...).ApiextensionsV1().CustomResourceDefinitions()
 	apiserviceClient := aggregatorfake.NewSimpleClientset(fakeAPIServices(t)...).ApiregistrationV1().APIServices()
 	d := NewDiscovery(kubernetes.Discovery(), crdClient, apiserviceClient)
 	ctx := context.TODO()
