@@ -35,11 +35,8 @@ spec:
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
+            description: The name must be "<.spec.resource.resouce>.<.spec.resource.group>".
             type: object
-            properties:
-              name:
-                description: The name must be "<.spec.resource.resouce>.<.spec.resource.group>".
-                type: string
           spec:
             description: Specification of the storage state.
             type: object
@@ -71,14 +68,14 @@ spec:
                 format: date-time
               persistedStorageVersionHashes:
                 description: The hash values of storage versions that persisted instances
-                  of spec.resource might still be encoded in. "Unknown" is a valid value
-                  in the list, and is the default value. It is not safe to upgrade or
-                  downgrade to an apiserver binary that does not support all versions
+                  of spec.resource might still be encoded in. "Unknown" is a valid
+                  value in the list, and is the default value. It is not safe to upgrade
+                  or downgrade to an apiserver binary that does not support all versions
                   listed in this field, or if "Unknown" is listed. Once the storage
-                  version migration for this resource has completed, the value of this
-                  field is refined to only contain the currentStorageVersionHash. Once
-                  the apiserver has changed the storage version, the new storage version
-                  is appended to the list.
+                  version migration for this resource has completed, the value of
+                  this field is refined to only contain the currentStorageVersionHash.
+                  Once the apiserver has changed the storage version, the new storage
+                  version is appended to the list.
                 type: array
                 items:
                   type: string
