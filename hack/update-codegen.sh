@@ -23,24 +23,24 @@ API_PKG="${THIS_REPO}/pkg/apis/migration/v1alpha1"
 # Absolute path to this repo
 THIS_REPO_ABSOLUTE="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
 
-go run ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen \
+go run -mod=vendor ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen \
   schemapatch:manifests="${THIS_REPO_ABSOLUTE}/manifests" \
   paths="${THIS_REPO_ABSOLUTE}/pkg/apis/migration/v1alpha1" \
   output:dir="${THIS_REPO_ABSOLUTE}/manifests"
 
-go run ./vendor/k8s.io/code-generator/cmd/client-gen \
+go run -mod=vendor ./vendor/k8s.io/code-generator/cmd/client-gen \
   --output-package "${THIS_REPO}/pkg/clients" \
   --clientset-name="clientset" \
   --input-base="${THIS_REPO}" \
   --input="pkg/apis/migration/v1alpha1" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
 
-go run ./vendor/k8s.io/code-generator/cmd/lister-gen \
+go run -mod=vendor ./vendor/k8s.io/code-generator/cmd/lister-gen \
   --output-package "${THIS_REPO}/pkg/clients/lister" \
   --input-dirs="${API_PKG}" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
 
-go run ./vendor/k8s.io/code-generator/cmd/informer-gen \
+go run -mod=vendor ./vendor/k8s.io/code-generator/cmd/informer-gen \
   --output-package "${THIS_REPO}/pkg/clients/informer" \
   --input-dirs="${API_PKG}" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt" \
@@ -48,7 +48,7 @@ go run ./vendor/k8s.io/code-generator/cmd/informer-gen \
   --versioned-clientset-package "${THIS_REPO}/pkg/clients/clientset" \
   --listers-package "${THIS_REPO}/pkg/clients/lister"
 
-go run ./vendor/k8s.io/code-generator/cmd/deepcopy-gen \
+go run -mod=vendor ./vendor/k8s.io/code-generator/cmd/deepcopy-gen \
   --input-dirs="${API_PKG}" \
   --output-file-base="zz_generated.deepcopy" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
