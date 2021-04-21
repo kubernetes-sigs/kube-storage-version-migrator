@@ -94,41 +94,41 @@ func migrationCRD() *v1.CustomResourceDefinition {
 							Description: "StorageVersionMigration represents a migration of stored data to the latest storage version.",
 							Type:        "object",
 							Properties: map[string]v1.JSONSchemaProps{
-								"apiVersion": v1.JSONSchemaProps{
+								"apiVersion": {
 									Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
 									Type:        "string",
 								},
-								"kind": v1.JSONSchemaProps{
+								"kind": {
 									Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
 									Type:        "string",
 								},
-								"metadata": v1.JSONSchemaProps{
+								"metadata": {
 									Type: "object",
 								},
-								"spec": v1.JSONSchemaProps{
+								"spec": {
 									Description: "Specification of the migration.",
 									Type:        "object",
 									Required: []string{
 										"resource",
 									},
 									Properties: map[string]v1.JSONSchemaProps{
-										"continueToken": v1.JSONSchemaProps{
+										"continueToken": {
 											Description: "The token used in the list options to get the next chunk of objects to migrate. When the .status.conditions indicates the migration is \"Running\", users can use this token to check the progress of the migration.",
 											Type:        "string",
 										},
-										"resource": v1.JSONSchemaProps{
+										"resource": {
 											Description: "The resource that is being migrated. The migrator sends requests to the endpoint serving the resource. Immutable.",
 											Type:        "object",
 											Properties: map[string]v1.JSONSchemaProps{
-												"group": v1.JSONSchemaProps{
+												"group": {
 													Description: "The name of the group.",
 													Type:        "string",
 												},
-												"resource": v1.JSONSchemaProps{
+												"resource": {
 													Description: "The name of the resource.",
 													Type:        "string",
 												},
-												"version": v1.JSONSchemaProps{
+												"version": {
 													Description: "The name of the version.",
 													Type:        "string",
 												},
@@ -136,11 +136,11 @@ func migrationCRD() *v1.CustomResourceDefinition {
 										},
 									},
 								},
-								"status": v1.JSONSchemaProps{
+								"status": {
 									Description: "Status of the migration.",
 									Type:        "object",
 									Properties: map[string]v1.JSONSchemaProps{
-										"conditions": v1.JSONSchemaProps{
+										"conditions": {
 											Description: "The latest available observations of the migration's current state.",
 											Type:        "array",
 											Items: &v1.JSONSchemaPropsOrArray{
@@ -152,24 +152,24 @@ func migrationCRD() *v1.CustomResourceDefinition {
 														"type",
 													},
 													Properties: map[string]v1.JSONSchemaProps{
-														"lastUpdateTime": v1.JSONSchemaProps{
+														"lastUpdateTime": {
 															Description: "The last time this condition was updated.",
 															Type:        "string",
 															Format:      "date-time",
 														},
-														"message": v1.JSONSchemaProps{
+														"message": {
 															Description: "A human readable message indicating details about the transition.",
 															Type:        "string",
 														},
-														"reason": v1.JSONSchemaProps{
+														"reason": {
 															Description: "The reason for the condition's last transition.",
 															Type:        "string",
 														},
-														"status": v1.JSONSchemaProps{
+														"status": {
 															Description: "Status of the condition, one of True, False, Unknown.",
 															Type:        "string",
 														},
-														"type": v1.JSONSchemaProps{
+														"type": {
 															Description: "Type of the condition.",
 															Type:        "string",
 														},
