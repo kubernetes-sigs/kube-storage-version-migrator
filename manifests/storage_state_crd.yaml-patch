@@ -1,0 +1,6 @@
+- op: add
+  path: /spec/versions/name=v1alpha1/schema/openAPIV3Schema/properties/metadata/properties
+  value:
+    name:
+      description: name must be "<.spec.resource.resouce>.<.spec.resource.group>".
+      type: string

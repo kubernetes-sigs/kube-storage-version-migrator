@@ -23,10 +23,22 @@ API_PKG="${THIS_REPO}/pkg/apis/migration/v1alpha1"
 # Absolute path to this repo
 THIS_REPO_ABSOLUTE="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
 
+mkdir -p _output
 go run -mod=vendor ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen \
   schemapatch:manifests="${THIS_REPO_ABSOLUTE}/manifests" \
   paths="${THIS_REPO_ABSOLUTE}/pkg/apis/migration/v1alpha1" \
   output:dir="${THIS_REPO_ABSOLUTE}/manifests"
+
+# download and run yaml-patch to add the metadata.name schema. Kubebuilder's controller-tools lacks
+# experessivity for that.
+curl -s -f -L https://github.com/krishicks/yaml-patch/releases/download/v0.0.10/yaml_patch_$(go env GOHOSTOS) -o _output/yaml-patch
+chmod +x _output/yaml-patch
+for m in "${THIS_REPO_ABSOLUTE}/manifests/"*.yaml; do
+  if [ -f "${m}-patch" ]; then
+    _output/yaml-patch -o "${m}-patch" < "${m}" > "_output/$(basename "${m}")"
+    mv _output/$(basename "${m}") "${THIS_REPO_ABSOLUTE}/manifests"
+  fi
+done
 
 go run -mod=vendor ./vendor/k8s.io/code-generator/cmd/client-gen \
   --output-package "${THIS_REPO}/pkg/clients" \
