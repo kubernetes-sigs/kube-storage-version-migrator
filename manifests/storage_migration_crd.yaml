@@ -21,8 +21,8 @@ spec:
       status: {}
     schema:
       openAPIV3Schema:
-        description: StorageVersionMigration represents a migration of stored data to
-          the latest storage version.
+        description: StorageVersionMigration represents a migration of stored data
+          to the latest storage version.
         type: object
         properties:
           apiVersion:
@@ -45,9 +45,9 @@ spec:
             properties:
               continueToken:
                 description: The token used in the list options to get the next chunk
-                  of objects to migrate. When the .status.conditions indicates the migration
-                  is "Running", users can use this token to check the progress of the
-                  migration.
+                  of objects to migrate. When the .status.conditions indicates the
+                  migration is "Running", users can use this token to check the progress
+                  of the migration.
                 type: string
               resource:
                 description: The resource that is being migrated. The migrator sends
@@ -68,8 +68,8 @@ spec:
             type: object
             properties:
               conditions:
-                description: The latest available observations of the migration's current
-                  state.
+                description: The latest available observations of the migration's
+                  current state.
                 type: array
                 items:
                   description: Describes the state of a migration at a certain point.

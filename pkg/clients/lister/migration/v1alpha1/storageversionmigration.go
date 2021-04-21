@@ -26,10 +26,13 @@ import (
 )
 
 // StorageVersionMigrationLister helps list StorageVersionMigrations.
+// All objects returned here must be treated as read-only.
 type StorageVersionMigrationLister interface {
 	// List lists all StorageVersionMigrations in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.StorageVersionMigration, err error)
 	// Get retrieves the StorageVersionMigration from the index for a given name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.StorageVersionMigration, error)
 	StorageVersionMigrationListerExpansion
 }

@@ -26,10 +26,13 @@ import (
 )
 
 // StorageStateLister helps list StorageStates.
+// All objects returned here must be treated as read-only.
 type StorageStateLister interface {
 	// List lists all StorageStates in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.StorageState, err error)
 	// Get retrieves the StorageState from the index for a given name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.StorageState, error)
 	StorageStateListerExpansion
 }
