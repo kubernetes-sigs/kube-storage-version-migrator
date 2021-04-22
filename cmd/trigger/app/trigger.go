@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -66,7 +67,11 @@ func Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	c := trigger.NewMigrationTrigger(migration)
+	kubeClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+	c := trigger.NewMigrationTrigger(migration, kubeClient)
 	c.Run(ctx)
 	panic("unreachable")
 }
