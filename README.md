@@ -6,8 +6,8 @@ To start using the storage version migrator, see the [user guide](USER_GUIDE.md)
 
 Related KEPs:
 
-* [Prototype design](https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/0030-storage-migration.md)
-* [Automated migration](https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/storage-migration-auto-trigger.md)
+* [Prototype design](https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/2330-migrating-api-objects-to-latest-storage-version/README.md)
+* [Automated migration](https://github.com/kubernetes/enhancements/tree/master/keps/sig-api-machinery/2343-automated-storage-version-migration-with-storage-version-hash/README.md)
 
 ## Community, discussion, contribution, and support
 
