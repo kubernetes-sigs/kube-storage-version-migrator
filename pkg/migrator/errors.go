@@ -63,6 +63,10 @@ func interpret(err error) error {
 		return nil
 	case errors.IsMethodNotSupported(err):
 		return ErrNotRetriable{err}
+	case errors.IsForbidden(err):
+		return ErrNotRetriable{err}
+	case errors.IsUnauthorized(err):
+		return ErrNotRetriable{err}
 	case errors.IsConflict(err):
 		return ErrRetriable{err}
 	case errors.IsServerTimeout(err):

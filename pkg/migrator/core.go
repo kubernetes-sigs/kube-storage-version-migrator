@@ -19,6 +19,7 @@ package migrator
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/klog/v2"
 
@@ -193,6 +195,17 @@ func (m *migrator) worker(ctx context.Context, workc <-chan *unstructured.Unstru
 	}
 }
 
+func defaultBackoff() *wait.Backoff {
+	return &wait.Backoff{
+		Steps:    math.MaxInt32,
+		Jitter:   0.1,
+		Factor:   1.5,
+		Duration: 1 * time.Second,
+		Cap:      10 * time.Second,
+	}
+
+}
+
 func (m *migrator) migrateOneItem(ctx context.Context, item *unstructured.Unstructured) error {
 	namespace, err := metadataAccessor.Namespace(item)
 	if err != nil {
@@ -203,24 +216,26 @@ func (m *migrator) migrateOneItem(ctx context.Context, item *unstructured.Unstru
 		return err
 	}
 	getBeforePut := false
+	backoff := defaultBackoff()
+
 	for {
 		getBeforePut, err = m.try(ctx, namespace, name, item, getBeforePut)
 		if err == nil || errors.IsNotFound(err) {
 			return nil
 		}
 		if canRetry(err) {
+			subject := fmt.Sprintf("migration of %s", name)
+			if len(namespace) > 0 {
+				subject += fmt.Sprintf(", in the namespace %s", namespace)
+			}
 			seconds, delay := errors.SuggestsClientDelay(err)
-			switch {
-			case delay && len(namespace) > 0:
-				klog.Warningf("migration of %s, in the %s namespace, will be retried after a %ds delay: %v", name, namespace, seconds, err)
+			if delay {
+				klog.Warningf("%s will be retried after a %ds delay: %v", subject, seconds, err)
 				time.Sleep(time.Duration(seconds) * time.Second)
-			case delay:
-				klog.Warningf("migration of %s will be retried after a %ds delay: %v", name, seconds, err)
-				time.Sleep(time.Duration(seconds) * time.Second)
-			case !delay && len(namespace) > 0:
-				klog.Warningf("migration of %s, in the %s namespace, will be retried: %v", name, namespace, err)
-			default:
-				klog.Warningf("migration of %s will be retried: %v", name, err)
+			} else {
+				duration := backoff.Step()
+				klog.Warningf("%s will be retried after a %v delay: %v", subject, duration, err)
+				time.Sleep(duration)
 			}
 			continue
 		}

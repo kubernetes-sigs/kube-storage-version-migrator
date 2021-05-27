@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	ptype "github.com/prometheus/client_model/go"
@@ -38,6 +39,10 @@ import (
 
 func newPod(name, namespace string) v1.Pod {
 	return v1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -81,6 +86,22 @@ func newNodeList(num int) v1.NodeList {
 		},
 		Items: nodes,
 	}
+}
+
+func toUnstructuredOrDie(l interface{}) *unstructured.Unstructured {
+	data, err := json.Marshal(l)
+	if err != nil {
+		panic(err)
+	}
+	uncastObj, err := runtime.Decode(unstructured.UnstructuredJSONScheme, data)
+	if err != nil {
+		panic(err)
+	}
+	ret, ok := uncastObj.(*unstructured.Unstructured)
+	if !ok {
+		panic(fmt.Sprintf("expected *unstructured.Unstructured, got %#v", uncastObj))
+	}
+	return ret
 }
 
 func toUnstructuredListOrDie(l interface{}) *unstructured.UnstructuredList {
@@ -311,5 +332,54 @@ func expectCounterCount(t *testing.T, name string, labelFilter map[string]string
 				}
 			}
 		}
+	}
+}
+
+func TestMigrateOneItemOnError(t *testing.T) {
+	client := fake.NewSimpleDynamicClient(scheme.Scheme)
+
+	count := 0
+	var lastRequest time.Time
+	var intervals []time.Duration
+	// let the migrator retry 3 times (4 tries in total), and record the interval between tries.
+	client.Fake.PrependReactor("update", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		_, ok := a.(clitesting.UpdateAction)
+		if !ok {
+			t.Fatalf("expected UpdateAction")
+		}
+		if count < 3 {
+			if count >= 1 {
+				intervals = append(intervals, time.Since(lastRequest))
+			}
+			lastRequest = time.Now()
+			count++
+			return true, nil, fmt.Errorf("some random retriable err")
+		}
+		if count == 3 {
+			intervals = append(intervals, time.Since(lastRequest))
+			count++
+			return true, nil, nil
+		}
+		t.Errorf("unexpected %d th attempt", count)
+		count++
+		return true, nil, nil
+	})
+
+	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client, &progressTracker{})
+	err := migrator.migrateOneItem(context.Background(), toUnstructuredOrDie(newPod("pod1", "ns1")))
+	if err != nil {
+		t.Errorf("unexpected error migrating one item: %v", err)
+	}
+	if len(intervals) != 3 {
+		t.Fatalf("expected 3 retries, got %d", len(intervals))
+	}
+	backoff := defaultBackoff()
+	duration := backoff.Duration
+	for i := 0; i < 3; i++ {
+		minimumInterval := time.Duration(float64(duration) * (1 - backoff.Jitter))
+		if intervals[i] <= minimumInterval {
+			t.Errorf("expected %d th retry interval to be at least %v, got %v", i, minimumInterval, intervals[i])
+		}
+		duration = time.Duration(float64(duration) * backoff.Factor)
 	}
 }
