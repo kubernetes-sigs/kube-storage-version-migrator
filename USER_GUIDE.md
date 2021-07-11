@@ -52,7 +52,8 @@ Prerequisites:
 Follow these steps to deploy:
 * Clone this repo.
 * Go to the root of this repo.
-* Run `make local-manifests`.
+* (Optional) Run `make push-all REGISTRY=<registry> VERSION=<version>`. Alternatively you could [use already published images](./README.md#published-images).
+* Run `make local-manifests REGISTRY=<registry> VERSION=<version>`.
 * Run `pushd manifests.local && kubectl apply -k ./ && popd`.
 
 By default, the trigger controller and migration controller are deployed in the
