@@ -28,6 +28,11 @@ The trigger controller
   the API server's [discovery document][] every 10 mins.
 * Creates [migration requests][] for resource types whose storage version changes.
 
+The trigger controller also creates migration requests for all resources when it
+is first installed in a cluster. This means that if the is migrator installed at
+a point where some resources are already stored in etcd at a legacy version, it
+_will_ migrate those resources.
+
 The migration controller processes the migration requests one by one. When migrating
 a resource type, for all objects of that resource type, the migration controller
 gets the object, then writes it back to the API server without modification. The
