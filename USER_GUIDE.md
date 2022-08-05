@@ -57,7 +57,7 @@ Follow these steps to deploy:
 
 By default, the trigger controller and migration controller are deployed in the
 `kube-system` namespace. If you want to deploy them in a different namespaces,
-setup the `NAMEPSPACE` environment variable before running the commands above.
+setup the `NAMESPACE` environment variable before running the commands above.
 
 ## Check if migration has completed
 
