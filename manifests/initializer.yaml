@@ -2,12 +2,11 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: initializer
-  namespace: NAMESPACE
 spec:
   template:
     spec:
       containers:
       - name: initializer
-        image: REGISTRY/storage-version-migration-initializer:VERSION
+        image: initializer
       restartPolicy: Never
   backoffLimit: 4

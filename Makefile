@@ -47,12 +47,14 @@ e2e-test:
 	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go test -mod=vendor -c -o ./test/e2e/e2e.test ./test/e2e
 
 .PHONY: local-manifests
-local-manifests:
+local-manifests: kustomize
 	mkdir -p manifests.local
 	cp manifests/* manifests.local/
-	find ./manifests.local -type f -exec sed -i -e "s|REGISTRY|$(REGISTRY)|g" {} \;
-	find ./manifests.local -type f -exec sed -i -e "s|VERSION|$(VERSION)|g" {} \;
-	find ./manifests.local -type f -exec sed -i -e "s|NAMESPACE|$(NAMESPACE)|g" {} \;
+	cd manifests.local && $(KUSTOMIZE) edit set namespace $(NAMESPACE) && \
+ 		$(KUSTOMIZE) edit set image \
+ 		trigger=$(REGISTRY)/storage-version-migration-trigger:$(VERSION) \
+ 		migrator=$(REGISTRY)/storage-version-migration-migrator:$(VERSION) \
+ 		initializer=$(REGISTRY)/storage-version-migration-initializer:$(VERSION)
 
 .PHONY: all-containers
 push-all: all-containers
@@ -79,3 +81,22 @@ delete-all-images:
 .PHONY: clean
 clean:
 	rm  -r ./manifests.local
+
+KUSTOMIZE = $(shell pwd)/_output/kustomize
+kustomize: ## Download kustomize locally if necessary.
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.2.0)
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_DIR)/_output go get $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef
+

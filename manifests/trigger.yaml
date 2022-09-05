@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: trigger
-  namespace: NAMESPACE
   labels:
     app: trigger
 spec:
@@ -17,7 +16,7 @@ spec:
     spec:
       containers:
       - name: trigger
-        image: REGISTRY/storage-version-migration-trigger:VERSION
+        image: trigger
         livenessProbe:
           httpGet:
             scheme: HTTP
