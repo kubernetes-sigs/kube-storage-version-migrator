@@ -41,6 +41,7 @@ var metadataAccessor = meta.NewAccessor()
 const (
 	defaultChunkLimit  = 500
 	defaultConcurrency = 1
+	maxRetries         = 10
 )
 
 type migrator struct {
@@ -203,12 +204,14 @@ func (m *migrator) migrateOneItem(ctx context.Context, item *unstructured.Unstru
 		return err
 	}
 	getBeforePut := false
+	retries := 0
 	for {
 		getBeforePut, err = m.try(ctx, namespace, name, item, getBeforePut)
 		if err == nil || errors.IsNotFound(err) {
 			return nil
 		}
-		if canRetry(err) {
+		retries++
+		if retries <= maxRetries && canRetry(err) {
 			seconds, delay := errors.SuggestsClientDelay(err)
 			switch {
 			case delay && len(namespace) > 0:
