@@ -33,6 +33,16 @@ rules:
   resources: ["storageversionmigrations"]
   verbs: ["create"]
 ---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storage-version-migration-migrator
+rules:
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["watch", "get", "list", "patch"]
+---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -43,7 +53,7 @@ subjects:
   namespace: NAMESPACE
 roleRef:
   kind: ClusterRole
-  name: cluster-admin
+  name: storage-version-migration-migrator
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ClusterRoleBinding
