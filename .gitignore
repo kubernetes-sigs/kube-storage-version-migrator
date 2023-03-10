@@ -1,1 +1,3 @@
 _output
+/manifests.local/
+/test/e2e/e2e.test

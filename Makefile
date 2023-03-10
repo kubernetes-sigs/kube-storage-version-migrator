@@ -78,4 +78,6 @@ delete-all-images:
 
 .PHONY: clean
 clean:
-	rm  -r ./manifests.local
+	$(RM) _output
+	$(RM) manifests.local
+	$(RM) test/e2e/e2e.test
