@@ -17,6 +17,7 @@ STAGING_REGISTRY := gcr.io/k8s-staging-storage-migrator
 VERSION ?= v0.1
 NAMESPACE ?= kube-system
 DELETE ?= "gcloud container images delete"
+COMPONENTS = initializer migrator trigger
 
 .PHONY: test
 test:
@@ -31,16 +32,11 @@ else
 endif
 
 .PHONY: all-containers
-all-containers:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/initializer/initializer ./cmd/initializer
-	docker build --no-cache -t $(REGISTRY)/storage-version-migration-initializer:$(VERSION) cmd/initializer
-	rm cmd/initializer/initializer
-	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/migrator/migrator ./cmd/migrator
-	docker build --no-cache -t $(REGISTRY)/storage-version-migration-migrator:$(VERSION) cmd/migrator
-	rm cmd/migrator/migrator
-	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/trigger/trigger ./cmd/trigger
-	docker build --no-cache -t $(REGISTRY)/storage-version-migration-trigger:$(VERSION) cmd/trigger
-	rm cmd/trigger/trigger
+all-containers: $(COMPONENTS:%=image-%)
+image-%:
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/$*/$* ./cmd/$*
+	docker build --no-cache -t $(REGISTRY)/storage-version-migration-$*:$(VERSION) cmd/$*
+	rm cmd/$*/$*
 
 .PHONY: e2e-test
 e2e-test:
@@ -54,27 +50,24 @@ local-manifests:
 	find ./manifests.local -type f -exec sed -i -e "s|VERSION|$(VERSION)|g" {} \;
 	find ./manifests.local -type f -exec sed -i -e "s|NAMESPACE|$(NAMESPACE)|g" {} \;
 
-.PHONY: all-containers
-push-all: all-containers
-	docker push $(REGISTRY)/storage-version-migration-initializer:$(VERSION)
-	docker push $(REGISTRY)/storage-version-migration-migrator:$(VERSION)
-	docker push $(REGISTRY)/storage-version-migration-trigger:$(VERSION)
+.PHONY: push-all
+push-all: $(COMPONENTS:%=push-%)
+push-%:
+	docker push $(REGISTRY)/storage-version-migration-$*:$(VERSION)
 
 .PHONY: release-staging release-alias-tag
 release-staging: ## Builds and push container images to the staging bucket.
 	REGISTRY=$(STAGING_REGISTRY) $(MAKE) push-all release-alias-tag
 
 .PHONY: release-alias-tag
-release-alias-tag: # Adds the tag to the last build tag. BASE_REF comes from the cloudbuild.yaml
-	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-initializer:$(VERSION) $(REGISTRY)/storage-version-migration-initializer:$(BASE_REF)
-	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-migrator:$(VERSION) $(REGISTRY)/storage-version-migration-migrator:$(BASE_REF)
-	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-trigger:$(VERSION) $(REGISTRY)/storage-version-migration-trigger:$(BASE_REF)
+release-alias-tag: $(COMPONENTS:%=release-alias-tag-%)
+release-alias-tag-%: # Adds the tag to the last build tag. BASE_REF comes from the cloudbuild.yaml
+	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-$*:$(VERSION) $(REGISTRY)/storage-version-migration-$*:$(BASE_REF)
 
 .PHONY: delete-all-images
-delete-all-images:
-	eval "$(DELETE) $(REGISTRY)/storage-version-migration-initializer:$(VERSION)"
-	eval "$(DELETE) $(REGISTRY)/storage-version-migration-migrator:$(VERSION)"
-	eval "$(DELETE) $(REGISTRY)/storage-version-migration-trigger:$(VERSION)"
+delete-all-images: $(COMPONENTS:%=delete-image-%)
+delete-image-%:
+	eval "$(DELETE) $(REGISTRY)/storage-version-migration-$*:$(VERSION)"
 
 .PHONY: clean
 clean:
