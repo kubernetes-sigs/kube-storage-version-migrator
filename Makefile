@@ -20,7 +20,7 @@ DELETE ?= "gcloud container images delete"
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -mod=vendor ./pkg/...
+	go test ./pkg/...
 
 .PHONY: all
 all:
@@ -32,19 +32,19 @@ endif
 
 .PHONY: all-containers
 all-containers:
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/initializer/initializer ./cmd/initializer
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/initializer/initializer ./cmd/initializer
 	docker build --no-cache -t $(REGISTRY)/storage-version-migration-initializer:$(VERSION) cmd/initializer
 	rm cmd/initializer/initializer
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/migrator/migrator ./cmd/migrator
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/migrator/migrator ./cmd/migrator
 	docker build --no-cache -t $(REGISTRY)/storage-version-migration-migrator:$(VERSION) cmd/migrator
 	rm cmd/migrator/migrator
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/trigger/trigger ./cmd/trigger
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/trigger/trigger ./cmd/trigger
 	docker build --no-cache -t $(REGISTRY)/storage-version-migration-trigger:$(VERSION) cmd/trigger
 	rm cmd/trigger/trigger
 
 .PHONY: e2e-test
 e2e-test:
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go test -mod=vendor -c -o ./test/e2e/e2e.test ./test/e2e
+	CGO_ENABLED=0 GOOS=linux go test -c -o ./test/e2e/e2e.test ./test/e2e
 
 .PHONY: local-manifests
 local-manifests:
