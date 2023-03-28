@@ -66,6 +66,7 @@ func Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	migration.DiscoveryClient.UseLegacyDiscovery = true
 	c := trigger.NewMigrationTrigger(migration)
 	c.Run(ctx)
 	panic("unreachable")

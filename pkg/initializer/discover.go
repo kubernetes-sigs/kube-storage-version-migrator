@@ -78,7 +78,7 @@ func (d *migrationDiscovery) FindMigratableResources(ctx context.Context) ([]sch
 		return nil, err
 	}
 	resourceToGroupVersions := make(map[string][]schema.GroupVersion)
-	resourceLists, err := d.discoveryClient.ServerResources()
+	_, resourceLists, err := d.discoveryClient.ServerGroupsAndResources()
 	if err != nil {
 		return nil, err
 	}
