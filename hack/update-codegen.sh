@@ -26,8 +26,11 @@ THIS_REPO_ABSOLUTE="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
 mkdir -p _output
 go run -mod=vendor ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen \
   schemapatch:manifests="${THIS_REPO_ABSOLUTE}/manifests" \
-  paths="${THIS_REPO_ABSOLUTE}/pkg/apis/migration/v1alpha1" \
+  paths="{${THIS_REPO_ABSOLUTE}/pkg/apis/migration/v1alpha1, ${THIS_REPO_ABSOLUTE}/pkg/apis/migration/v1beta1}" \
   output:dir="${THIS_REPO_ABSOLUTE}/manifests"
+
+# For debugging purposes, exit after CRDs are updated.
+exit
 
 # download and run yaml-patch to add the metadata.name schema. Kubebuilder's controller-tools lacks
 # experessivity for that.
