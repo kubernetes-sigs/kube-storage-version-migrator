@@ -26,11 +26,11 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
-	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/controller"
 )
 
-func storageStateName(resource migrationv1alpha1.GroupVersionResource) string {
+func storageStateName(resource migrationv1beta1.GroupVersionResource) string {
 	// TODO: add this rule to the CRD validation
 	// TODO: we might use ResourceID as the name in the future.
 	if resource.Group == "" {
@@ -39,11 +39,11 @@ func storageStateName(resource migrationv1alpha1.GroupVersionResource) string {
 	return resource.Resource + "." + resource.Group
 }
 
-func (mt *MigrationTrigger) markStorageStateSucceeded(ctx context.Context, resource migrationv1alpha1.GroupVersionResource) error {
+func (mt *MigrationTrigger) markStorageStateSucceeded(ctx context.Context, resource migrationv1beta1.GroupVersionResource) error {
 	// We will retry on any error. Migrating a resource takes a long time.
 	// It would be a pity to give up just because of an update error.
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		ss, err := mt.client.MigrationV1alpha1().StorageStates().Get(ctx, storageStateName(resource), metav1.GetOptions{})
+		ss, err := mt.client.MigrationV1beta1().StorageStates().Get(ctx, storageStateName(resource), metav1.GetOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilruntime.HandleError(err)
 			return false, nil
@@ -56,7 +56,7 @@ func (mt *MigrationTrigger) markStorageStateSucceeded(ctx context.Context, resou
 			return true, nil
 		}
 		ss.Status.PersistedStorageVersionHashes = []string{ss.Status.CurrentStorageVersionHash}
-		_, err = mt.client.MigrationV1alpha1().StorageStates().UpdateStatus(ctx, ss, metav1.UpdateOptions{})
+		_, err = mt.client.MigrationV1beta1().StorageStates().UpdateStatus(ctx, ss, metav1.UpdateOptions{})
 		if err != nil {
 			utilruntime.HandleError(err)
 			return false, nil
@@ -65,12 +65,12 @@ func (mt *MigrationTrigger) markStorageStateSucceeded(ctx context.Context, resou
 	})
 }
 
-func (mt *MigrationTrigger) processMigration(ctx context.Context, m *migrationv1alpha1.StorageVersionMigration) error {
+func (mt *MigrationTrigger) processMigration(ctx context.Context, m *migrationv1beta1.StorageVersionMigration) error {
 	klog.V(2).Infof("processing migration %#v", m)
 	switch {
-	case controller.HasCondition(m, migrationv1alpha1.MigrationSucceeded):
+	case controller.HasCondition(m, migrationv1beta1.MigrationSucceeded):
 		return mt.markStorageStateSucceeded(ctx, m.Spec.Resource)
-	case controller.HasCondition(m, migrationv1alpha1.MigrationFailed):
+	case controller.HasCondition(m, migrationv1beta1.MigrationFailed):
 		// The migration controller should have already tried its best
 		// to complete the migration before marking the migration as
 		// failed. There is nothing the triggering controller can do.
@@ -87,7 +87,7 @@ func (mt *MigrationTrigger) processQueue(ctx context.Context, obj interface{}) e
 	}
 	// historic migrations are cleaned up when the controller observes
 	// storage version changes in the discovery doc.
-	m, err := mt.client.MigrationV1alpha1().StorageVersionMigrations().Get(ctx, item.name, metav1.GetOptions{})
+	m, err := mt.client.MigrationV1beta1().StorageVersionMigrations().Get(ctx, item.name, metav1.GetOptions{})
 	if err == nil {
 		return mt.processMigration(ctx, m)
 	}

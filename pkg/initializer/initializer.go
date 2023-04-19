@@ -30,15 +30,15 @@ import (
 	"k8s.io/client-go/discovery"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	apiregistrationv1 "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistration/v1"
-	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
-	"sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1beta1"
 )
 
 type initializer struct {
 	discovery       *migrationDiscovery
 	crdClient       apiextensionsv1.CustomResourceDefinitionInterface
 	namespaceClient corev1.NamespaceInterface
-	migrationClient v1alpha1.StorageVersionMigrationInterface
+	migrationClient v1beta1.StorageVersionMigrationInterface
 }
 
 func NewInitializer(
@@ -46,7 +46,7 @@ func NewInitializer(
 	crdClient apiextensionsv1.CustomResourceDefinitionInterface,
 	apiserviceClient apiregistrationv1.APIServiceInterface,
 	namespaceClient corev1.NamespaceInterface,
-	migrationGetter v1alpha1.StorageVersionMigrationsGetter,
+	migrationGetter v1beta1.StorageVersionMigrationsGetter,
 ) *initializer {
 	d := NewDiscovery(disocveryClient, crdClient, apiserviceClient)
 	return &initializer{
@@ -83,7 +83,7 @@ func migrationCRD() *v1.CustomResourceDefinition {
 			Scope: v1.ClusterScoped,
 			Versions: []v1.CustomResourceDefinitionVersion{
 				{
-					Name:    "v1alpha1",
+					Name:    "v1beta1",
 					Served:  true,
 					Storage: true,
 					Subresources: &v1.CustomResourceSubresources{
@@ -188,19 +188,19 @@ func migrationCRD() *v1.CustomResourceDefinition {
 	}
 }
 
-func migrationForResource(resource schema.GroupVersionResource) *migrationv1alpha1.StorageVersionMigration {
+func migrationForResource(resource schema.GroupVersionResource) *migrationv1beta1.StorageVersionMigration {
 	var name string
 	if len(resource.Group) != 0 {
 		name = fmt.Sprintf("%s.%s.%s-", resource.Group, resource.Version, resource.Resource)
 	} else {
 		name = fmt.Sprintf("%s.%s-", resource.Version, resource.Resource)
 	}
-	return &migrationv1alpha1.StorageVersionMigration{
+	return &migrationv1beta1.StorageVersionMigration{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: name,
 		},
-		Spec: migrationv1alpha1.StorageVersionMigrationSpec{
-			Resource: migrationv1alpha1.GroupVersionResource{
+		Spec: migrationv1beta1.StorageVersionMigrationSpec{
+			Resource: migrationv1beta1.GroupVersionResource{
 				Group:    resource.Group,
 				Version:  resource.Version,
 				Resource: resource.Resource,
@@ -210,7 +210,7 @@ func migrationForResource(resource schema.GroupVersionResource) *migrationv1alph
 }
 
 func (init *initializer) initializeCRD(ctx context.Context) error {
-	crdName := fmt.Sprintf("%s.%s", pluralCRDName, migrationv1alpha1.GroupName)
+	crdName := fmt.Sprintf("%s.%s", pluralCRDName, migrationv1beta1.GroupName)
 	// check if crd already exists
 	_, err := init.crdClient.Get(ctx, crdName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {

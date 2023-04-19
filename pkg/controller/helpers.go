@@ -19,14 +19,14 @@ package controller
 import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 )
 
-func HasCondition(m *migrationv1alpha1.StorageVersionMigration, conditionType migrationv1alpha1.MigrationConditionType) bool {
+func HasCondition(m *migrationv1beta1.StorageVersionMigration, conditionType migrationv1beta1.MigrationConditionType) bool {
 	return indexOfCondition(m, conditionType) != -1
 }
 
-func indexOfCondition(m *migrationv1alpha1.StorageVersionMigration, conditionType migrationv1alpha1.MigrationConditionType) int {
+func indexOfCondition(m *migrationv1beta1.StorageVersionMigration, conditionType migrationv1beta1.MigrationConditionType) int {
 	for i, c := range m.Status.Conditions {
 		if c.Type == conditionType && c.Status == corev1.ConditionTrue {
 			return i
@@ -35,7 +35,7 @@ func indexOfCondition(m *migrationv1alpha1.StorageVersionMigration, conditionTyp
 	return -1
 }
 
-func resource(m *migrationv1alpha1.StorageVersionMigration) schema.GroupVersionResource {
+func resource(m *migrationv1beta1.StorageVersionMigration) schema.GroupVersionResource {
 	return schema.GroupVersionResource{
 		Group:    m.Spec.Resource.Group,
 		Version:  m.Spec.Resource.Version,

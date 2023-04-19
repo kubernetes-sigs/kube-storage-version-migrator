@@ -23,43 +23,43 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
-	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/fake"
 )
 
-func newMigration(name string, conditionType migrationv1alpha1.MigrationConditionType) *migrationv1alpha1.StorageVersionMigration {
-	newCondition := migrationv1alpha1.MigrationCondition{
+func newMigration(name string, conditionType migrationv1beta1.MigrationConditionType) *migrationv1beta1.StorageVersionMigration {
+	newCondition := migrationv1beta1.MigrationCondition{
 		Type:   conditionType,
 		Status: corev1.ConditionTrue,
 	}
-	return &migrationv1alpha1.StorageVersionMigration{
+	return &migrationv1beta1.StorageVersionMigration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Status: migrationv1alpha1.StorageVersionMigrationStatus{
-			Conditions: []migrationv1alpha1.MigrationCondition{
+		Status: migrationv1beta1.StorageVersionMigrationStatus{
+			Conditions: []migrationv1beta1.MigrationCondition{
 				newCondition,
 			},
 		},
 	}
 }
 
-func newMigrationForResource(name string, r migrationv1alpha1.GroupVersionResource) *migrationv1alpha1.StorageVersionMigration {
-	return &migrationv1alpha1.StorageVersionMigration{
+func newMigrationForResource(name string, r migrationv1beta1.GroupVersionResource) *migrationv1beta1.StorageVersionMigration {
+	return &migrationv1beta1.StorageVersionMigration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: migrationv1alpha1.StorageVersionMigrationSpec{
+		Spec: migrationv1beta1.StorageVersionMigrationSpec{
 			Resource: r,
 		},
 	}
 }
 
 func TestStatusIndexedInformer(t *testing.T) {
-	running := newMigration("Running", migrationv1alpha1.MigrationRunning)
-	succeeded := newMigration("Succeeded", migrationv1alpha1.MigrationSucceeded)
-	failed := newMigration("Failed", migrationv1alpha1.MigrationFailed)
-	pending := &migrationv1alpha1.StorageVersionMigration{
+	running := newMigration("Running", migrationv1beta1.MigrationRunning)
+	succeeded := newMigration("Succeeded", migrationv1beta1.MigrationSucceeded)
+	failed := newMigration("Failed", migrationv1beta1.MigrationFailed)
+	pending := &migrationv1beta1.StorageVersionMigration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "Pending",
 		},
@@ -99,10 +99,10 @@ func TestStatusIndexedInformer(t *testing.T) {
 }
 
 func TestResourceIndexedInformer(t *testing.T) {
-	podsv1R := migrationv1alpha1.GroupVersionResource{Group: "core", Version: "v1", Resource: "pods"}
-	podsv2R := migrationv1alpha1.GroupVersionResource{Group: "core", Version: "v2", Resource: "pods"}
-	nodesv1R := migrationv1alpha1.GroupVersionResource{Group: "core", Version: "v1", Resource: "nodes"}
-	jobsv1R := migrationv1alpha1.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
+	podsv1R := migrationv1beta1.GroupVersionResource{Group: "core", Version: "v1", Resource: "pods"}
+	podsv2R := migrationv1beta1.GroupVersionResource{Group: "core", Version: "v2", Resource: "pods"}
+	nodesv1R := migrationv1beta1.GroupVersionResource{Group: "core", Version: "v1", Resource: "nodes"}
+	jobsv1R := migrationv1beta1.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
 	podsv1 := newMigrationForResource("podsv1", podsv1R)
 	podsv2 := newMigrationForResource("podsv2", podsv2R)
 	nodesv1 := newMigrationForResource("nodesv1", nodesv1R)

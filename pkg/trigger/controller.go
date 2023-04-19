@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/controller"
 )
@@ -91,11 +91,11 @@ type queueItem struct {
 	// the name of the storageVersionMigration object.
 	name string
 	// the resource the storageVersionMigration object is about.
-	resource migrationv1alpha1.GroupVersionResource
+	resource migrationv1beta1.GroupVersionResource
 }
 
 func (mt *MigrationTrigger) addResource(obj interface{}) {
-	m, ok := obj.(*migrationv1alpha1.StorageVersionMigration)
+	m, ok := obj.(*migrationv1beta1.StorageVersionMigration)
 	if !ok {
 		utilruntime.HandleError(fmt.Errorf("expected StorageVersionMigration, got %#v", reflect.TypeOf(obj)))
 		return
@@ -104,14 +104,14 @@ func (mt *MigrationTrigger) addResource(obj interface{}) {
 }
 
 func (mt *MigrationTrigger) deleteResource(obj interface{}) {
-	m, ok := obj.(*migrationv1alpha1.StorageVersionMigration)
+	m, ok := obj.(*migrationv1beta1.StorageVersionMigration)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
 			utilruntime.HandleError(fmt.Errorf("couldn't get object from tombstone %+v", obj))
 			return
 		}
-		m, ok = tombstone.Obj.(*migrationv1alpha1.StorageVersionMigration)
+		m, ok = tombstone.Obj.(*migrationv1beta1.StorageVersionMigration)
 		if !ok {
 			utilruntime.HandleError(fmt.Errorf("tombstone contained object that is not a StorageVersionMigration %#v", obj))
 			return
@@ -124,7 +124,7 @@ func (mt *MigrationTrigger) updateResource(oldObj interface{}, obj interface{}) 
 	mt.addResource(obj)
 }
 
-func (mt *MigrationTrigger) enqueueResource(migration *migrationv1alpha1.StorageVersionMigration) {
+func (mt *MigrationTrigger) enqueueResource(migration *migrationv1beta1.StorageVersionMigration) {
 	it := &queueItem{
 		namespace: migration.Namespace,
 		name:      migration.Name,

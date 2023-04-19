@@ -21,9 +21,9 @@ import (
 	"reflect"
 
 	"k8s.io/client-go/tools/cache"
-	migration_v1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migration_v1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
-	migrationinformer "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/informer/migration/v1alpha1"
+	migrationinformer "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/informer/migration/v1beta1"
 )
 
 const (
@@ -37,14 +37,14 @@ const (
 
 // migrationStatusIndexFunc categorizes StorageVersionMigrations based on their conditions.
 func migrationStatusIndexFunc(obj interface{}) ([]string, error) {
-	m, ok := obj.(*migration_v1alpha1.StorageVersionMigration)
+	m, ok := obj.(*migration_v1beta1.StorageVersionMigration)
 	if !ok {
 		return []string{}, fmt.Errorf("expected StroageVersionMigration, got %#v", reflect.TypeOf(obj))
 	}
-	if HasCondition(m, migration_v1alpha1.MigrationSucceeded) || HasCondition(m, migration_v1alpha1.MigrationFailed) {
+	if HasCondition(m, migration_v1beta1.MigrationSucceeded) || HasCondition(m, migration_v1beta1.MigrationFailed) {
 		return []string{StatusCompleted}, nil
 	}
-	if HasCondition(m, migration_v1alpha1.MigrationRunning) {
+	if HasCondition(m, migration_v1beta1.MigrationRunning) {
 		return []string{StatusRunning}, nil
 	}
 	return []string{StatusPending}, nil
@@ -54,13 +54,13 @@ func NewStatusIndexedInformer(c migrationclient.Interface) cache.SharedIndexInfo
 	return migrationinformer.NewStorageVersionMigrationInformer(c, 0, cache.Indexers{StatusIndex: migrationStatusIndexFunc})
 }
 
-func ToIndex(r migration_v1alpha1.GroupVersionResource) string {
+func ToIndex(r migration_v1beta1.GroupVersionResource) string {
 	return r.Resource + "." + r.Group
 }
 
 // migrationResourceIndexFunc categorizes StorageVersionMigrations based on the <.spec.resource.resource>.<.spec.resource.group>.
 func migrationResourceIndexFunc(obj interface{}) ([]string, error) {
-	m, ok := obj.(*migration_v1alpha1.StorageVersionMigration)
+	m, ok := obj.(*migration_v1beta1.StorageVersionMigration)
 	if !ok {
 		return []string{}, fmt.Errorf("expected StroageVersionMigration, got %#v", reflect.TypeOf(obj))
 	}

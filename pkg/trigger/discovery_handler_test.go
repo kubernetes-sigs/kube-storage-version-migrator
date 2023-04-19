@@ -33,7 +33,7 @@ import (
 	core "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 
-	"sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	"sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/fake"
 )
 
@@ -58,12 +58,12 @@ func TestProcessDiscoveryResource(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected create action")
 	}
-	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storagestates"}
+	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1beta1", Resource: "storagestates"}
 	if c.GetResource() != r {
 		t.Fatalf("unexpected resource %v", c.GetResource())
 	}
 
-	verifyStorageStateUpdate(t, actions[9], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1alpha1.Unknown})
+	verifyStorageStateUpdate(t, actions[9], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1beta1.Unknown})
 }
 
 func TestProcessDiscoveryResourceStaleState(t *testing.T) {
@@ -85,7 +85,7 @@ func TestProcessDiscoveryResourceStaleState(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected delete action")
 	}
-	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storagestates"}
+	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1beta1", Resource: "storagestates"}
 	if d.GetResource() != r {
 		t.Fatalf("unexpected resource %v", d.GetResource())
 	}
@@ -99,12 +99,12 @@ func TestProcessDiscoveryResourceStaleState(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected create action")
 	}
-	r = schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storagestates"}
+	r = schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1beta1", Resource: "storagestates"}
 	if c.GetResource() != r {
 		t.Fatalf("unexpected resource %v", c.GetResource())
 	}
 
-	verifyStorageStateUpdate(t, actions[10], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1alpha1.Unknown})
+	verifyStorageStateUpdate(t, actions[10], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1beta1.Unknown})
 }
 
 func TestProcessDiscoveryResourceStorageVersionChanged(t *testing.T) {
@@ -163,7 +163,7 @@ func TestProcessDiscoveryResourceStorageMigrationMissing(t *testing.T) {
 		storageState(
 			withFreshHeartbeat(),
 			withCurrentVersion("newhash"),
-			withPersistedVersions(v1alpha1.Unknown),
+			withPersistedVersions(v1beta1.Unknown),
 		),
 	)
 	trigger := NewMigrationTrigger(client)
@@ -180,7 +180,7 @@ func TestProcessDiscoveryResourceStorageMigrationMissing(t *testing.T) {
 
 	actions := client.Actions()
 	expectCreateStorageVersionMigrationAction(t, actions[3])
-	verifyStorageStateUpdate(t, actions[len(actions)-1], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1alpha1.Unknown})
+	verifyStorageStateUpdate(t, actions[len(actions)-1], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1beta1.Unknown})
 }
 
 func TestProcessDiscoveryResourceStorageMigrationFailed(t *testing.T) {
@@ -189,7 +189,7 @@ func TestProcessDiscoveryResourceStorageMigrationFailed(t *testing.T) {
 		storageState(
 			withFreshHeartbeat(),
 			withCurrentVersion("newhash"),
-			withPersistedVersions(v1alpha1.Unknown),
+			withPersistedVersions(v1beta1.Unknown),
 		),
 	)
 	trigger := NewMigrationTrigger(client)
@@ -205,16 +205,16 @@ func TestProcessDiscoveryResourceStorageMigrationFailed(t *testing.T) {
 	trigger.processDiscoveryResource(context.Background(), discoveredResource)
 	actions := client.Actions()
 	expectCreateStorageVersionMigrationAction(t, actions[4])
-	verifyStorageStateUpdate(t, actions[len(actions)-1], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1alpha1.Unknown})
+	verifyStorageStateUpdate(t, actions[len(actions)-1], trigger.heartbeat, discoveredResource.StorageVersionHash, []string{v1beta1.Unknown})
 }
 
-func storageState(options ...func(*v1alpha1.StorageState)) *v1alpha1.StorageState {
-	ss := &v1alpha1.StorageState{
+func storageState(options ...func(*v1beta1.StorageState)) *v1beta1.StorageState {
+	ss := &v1beta1.StorageState{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: storageStateName(v1alpha1.GroupVersionResource{Resource: "pods"}),
+			Name: storageStateName(v1beta1.GroupVersionResource{Resource: "pods"}),
 		},
-		Spec: v1alpha1.StorageStateSpec{
-			Resource: v1alpha1.GroupResource{Resource: "pods"},
+		Spec: v1beta1.StorageStateSpec{
+			Resource: v1beta1.GroupResource{Resource: "pods"},
 		},
 	}
 	for _, fn := range options {
@@ -223,56 +223,56 @@ func storageState(options ...func(*v1alpha1.StorageState)) *v1alpha1.StorageStat
 	return ss
 }
 
-func withFreshHeartbeat() func(*v1alpha1.StorageState) {
-	return func(ss *v1alpha1.StorageState) {
+func withFreshHeartbeat() func(*v1beta1.StorageState) {
+	return func(ss *v1beta1.StorageState) {
 		ss.Status.LastHeartbeatTime = metav1.NewTime(metav1.Now().Add(-1 * discoveryPeriod))
 	}
 }
 
-func withStaleHeartbeat() func(*v1alpha1.StorageState) {
-	return func(ss *v1alpha1.StorageState) {
+func withStaleHeartbeat() func(*v1beta1.StorageState) {
+	return func(ss *v1beta1.StorageState) {
 		ss.Status.LastHeartbeatTime = metav1.NewTime(metav1.Now().Add(-3 * discoveryPeriod))
 	}
 }
 
-func withCurrentVersion(version string) func(*v1alpha1.StorageState) {
-	return func(ss *v1alpha1.StorageState) {
+func withCurrentVersion(version string) func(*v1beta1.StorageState) {
+	return func(ss *v1beta1.StorageState) {
 		ss.Status.CurrentStorageVersionHash = version
 	}
 }
 
-func withPersistedVersions(versions ...string) func(*v1alpha1.StorageState) {
-	return func(ss *v1alpha1.StorageState) {
+func withPersistedVersions(versions ...string) func(*v1beta1.StorageState) {
+	return func(ss *v1beta1.StorageState) {
 		ss.Status.PersistedStorageVersionHashes = append(ss.Status.PersistedStorageVersionHashes, versions...)
 	}
 }
 
-func newMigrationList() *v1alpha1.StorageVersionMigrationList {
-	var migrations []v1alpha1.StorageVersionMigration
+func newMigrationList() *v1beta1.StorageVersionMigrationList {
+	var migrations []v1beta1.StorageVersionMigration
 	for i := 0; i < 3; i++ {
 		migration := storageMigration(withName(fmt.Sprintf("migration%d", i)))
 		migrations = append(migrations, *migration)
 	}
 	for i := 3; i < 6; i++ {
-		migration := storageMigration(withName(fmt.Sprintf("migration%d", i)), withResource(v1alpha1.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"}))
+		migration := storageMigration(withName(fmt.Sprintf("migration%d", i)), withResource(v1beta1.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"}))
 		migrations = append(migrations, *migration)
 	}
-	return &v1alpha1.StorageVersionMigrationList{
+	return &v1beta1.StorageVersionMigrationList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StorageVersionMigrationList",
-			APIVersion: "migraiton.k8s.io/v1alpha1",
+			APIVersion: "migraiton.k8s.io/v1beta1",
 		},
 		Items: migrations,
 	}
 }
 
-func storageMigration(options ...func(*v1alpha1.StorageVersionMigration)) *v1alpha1.StorageVersionMigration {
-	m := &v1alpha1.StorageVersionMigration{
+func storageMigration(options ...func(*v1beta1.StorageVersionMigration)) *v1beta1.StorageVersionMigration {
+	m := &v1beta1.StorageVersionMigration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "pods",
 		},
-		Spec: v1alpha1.StorageVersionMigrationSpec{
-			Resource: v1alpha1.GroupVersionResource{Version: "v1", Resource: "pods"},
+		Spec: v1beta1.StorageVersionMigrationSpec{
+			Resource: v1beta1.GroupVersionResource{Version: "v1", Resource: "pods"},
 		},
 	}
 	for _, option := range options {
@@ -281,22 +281,22 @@ func storageMigration(options ...func(*v1alpha1.StorageVersionMigration)) *v1alp
 	return m
 }
 
-func withName(name string) func(*v1alpha1.StorageVersionMigration) {
-	return func(migration *v1alpha1.StorageVersionMigration) {
+func withName(name string) func(*v1beta1.StorageVersionMigration) {
+	return func(migration *v1beta1.StorageVersionMigration) {
 		migration.Name = name
 	}
 }
 
-func withResource(resource v1alpha1.GroupVersionResource) func(*v1alpha1.StorageVersionMigration) {
-	return func(migration *v1alpha1.StorageVersionMigration) {
+func withResource(resource v1beta1.GroupVersionResource) func(*v1beta1.StorageVersionMigration) {
+	return func(migration *v1beta1.StorageVersionMigration) {
 		migration.Spec.Resource = resource
 	}
 }
 
-func withFailedCondition() func(*v1alpha1.StorageVersionMigration) {
-	return func(migration *v1alpha1.StorageVersionMigration) {
-		migration.Status.Conditions = append(migration.Status.Conditions, v1alpha1.MigrationCondition{
-			Type:   v1alpha1.MigrationFailed,
+func withFailedCondition() func(*v1beta1.StorageVersionMigration) {
+	return func(migration *v1beta1.StorageVersionMigration) {
+		migration.Status.Conditions = append(migration.Status.Conditions, v1beta1.MigrationCondition{
+			Type:   v1beta1.MigrationFailed,
 			Status: v1.ConditionTrue,
 		})
 	}
@@ -322,7 +322,7 @@ func verifyCleanupAndLaunch(t *testing.T, actions []core.Action) {
 		if !ok {
 			t.Fatalf("expected delete action")
 		}
-		r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storageversionmigrations"}
+		r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1beta1", Resource: "storageversionmigrations"}
 		if d.GetResource() != r {
 			t.Fatalf("unexpected resource %v", d.GetResource())
 		}
@@ -333,8 +333,8 @@ func verifyCleanupAndLaunch(t *testing.T, actions []core.Action) {
 	expectCreateStorageVersionMigrationAction(t, actions[3])
 }
 
-func expectCreateStorageVersionMigrationAction(t *testing.T, action core.Action) *v1alpha1.StorageVersionMigration {
-	return expectCreateAction(t, action, schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storageversionmigrations"}).(*v1alpha1.StorageVersionMigration)
+func expectCreateStorageVersionMigrationAction(t *testing.T, action core.Action) *v1beta1.StorageVersionMigration {
+	return expectCreateAction(t, action, schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1beta1", Resource: "storageversionmigrations"}).(*v1beta1.StorageVersionMigration)
 }
 
 func expectCreateAction(t *testing.T, action core.Action, gvr schema.GroupVersionResource) runtime.Object {
@@ -353,14 +353,14 @@ func verifyStorageStateUpdate(t *testing.T, a core.Action, expectedHeartbeat met
 	if !ok {
 		t.Fatalf("expected update action")
 	}
-	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storagestates"}
+	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1beta1", Resource: "storagestates"}
 	if u.GetResource() != r {
 		t.Fatalf("unexpected resource %v", u.GetResource())
 	}
 	if u.GetSubresource() != "status" {
 		t.Fatalf("unexpected subresource %v", u.GetSubresource())
 	}
-	ss, ok := u.GetObject().(*v1alpha1.StorageState)
+	ss, ok := u.GetObject().(*v1beta1.StorageState)
 	if !ok {
 		t.Fatalf("expected storage state, got %v", ss)
 	}
@@ -423,10 +423,10 @@ func TestProcessDiscoveryPartialFailure(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected create action")
 	}
-	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1alpha1", Resource: "storagestates"}
+	r := schema.GroupVersionResource{Group: "migration.k8s.io", Version: "v1beta1", Resource: "storagestates"}
 	if c.GetResource() != r {
 		t.Fatalf("unexpected resource %v", c.GetResource())
 	}
 
-	verifyStorageStateUpdate(t, actions[9], trigger.heartbeat, newAPIResource().StorageVersionHash, []string{v1alpha1.Unknown})
+	verifyStorageStateUpdate(t, actions[9], trigger.heartbeat, newAPIResource().StorageVersionHash, []string{v1beta1.Unknown})
 }

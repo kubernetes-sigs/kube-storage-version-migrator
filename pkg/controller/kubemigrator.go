@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
-	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/migrator"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/migrator/metrics"
@@ -92,26 +92,26 @@ func (km *KubeMigrator) process(ctx context.Context) {
 }
 
 func (km *KubeMigrator) processOne(ctx context.Context, obj interface{}) error {
-	m, ok := obj.(*migrationv1alpha1.StorageVersionMigration)
+	m, ok := obj.(*migrationv1beta1.StorageVersionMigration)
 	if !ok {
 		return fmt.Errorf("expected StorageVersionMigration, got %#v", reflect.TypeOf(obj))
 	}
 	// get the fresh object from the apiserver to make sure the object
 	// still exists, and the object is not completed.
-	m, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations().Get(ctx, m.Name, metav1.GetOptions{})
+	m, err := km.migrationClient.MigrationV1beta1().StorageVersionMigrations().Get(ctx, m.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	if HasCondition(m, migrationv1alpha1.MigrationSucceeded) || HasCondition(m, migrationv1alpha1.MigrationFailed) {
+	if HasCondition(m, migrationv1beta1.MigrationSucceeded) || HasCondition(m, migrationv1beta1.MigrationFailed) {
 		klog.V(2).Infof("%v: migration has already completed", m.Name)
 		return nil
 	}
-	m, err = km.updateStatus(ctx, m, migrationv1alpha1.MigrationRunning, "")
+	m, err = km.updateStatus(ctx, m, migrationv1beta1.MigrationRunning, "")
 	klog.V(2).Infof("%v: migration running", m.Name)
 	if err != nil {
 		return err
 	}
-	progressTracker := migrator.NewProgressTracker(km.migrationClient.MigrationV1alpha1().StorageVersionMigrations(), m.Name)
+	progressTracker := migrator.NewProgressTracker(km.migrationClient.MigrationV1beta1().StorageVersionMigrations(), m.Name)
 	core := migrator.NewMigrator(resource(m), km.dynamic, progressTracker)
 	// If the storageVersionMigration object is deleted during Run(), Run()
 	// will return an error when it tries to write the continueToken into the
@@ -120,7 +120,7 @@ func (km *KubeMigrator) processOne(ctx context.Context, obj interface{}) error {
 	err = core.Run(ctx)
 	utilruntime.HandleError(err)
 	if err == nil {
-		if _, err := km.updateStatus(ctx, m, migrationv1alpha1.MigrationSucceeded, ""); err != nil {
+		if _, err := km.updateStatus(ctx, m, migrationv1beta1.MigrationSucceeded, ""); err != nil {
 			utilruntime.HandleError(err)
 		}
 		metrics.Metrics.ObserveSucceededMigration(resource(m).String())
@@ -128,7 +128,7 @@ func (km *KubeMigrator) processOne(ctx context.Context, obj interface{}) error {
 		return err
 	}
 	klog.Errorf("%v: migration failed: %v", m.Name, err)
-	if _, err := km.updateStatus(ctx, m, migrationv1alpha1.MigrationFailed, err.Error()); err != nil {
+	if _, err := km.updateStatus(ctx, m, migrationv1beta1.MigrationFailed, err.Error()); err != nil {
 		utilruntime.HandleError(err)
 	}
 	metrics.Metrics.ObserveFailedMigration(resource(m).String())
@@ -139,7 +139,7 @@ func (km *KubeMigrator) processOne(ctx context.Context, obj interface{}) error {
 // apiserver, because it's a pity to start over the entire migration merely
 // because a status update failure.
 // updateStatus also removes other KNOWN conditions.
-func (km *KubeMigrator) updateStatus(ctx context.Context, m *migrationv1alpha1.StorageVersionMigration, condition migrationv1alpha1.MigrationConditionType, message string) (*migrationv1alpha1.StorageVersionMigration, error) {
+func (km *KubeMigrator) updateStatus(ctx context.Context, m *migrationv1beta1.StorageVersionMigration, condition migrationv1beta1.MigrationConditionType, message string) (*migrationv1beta1.StorageVersionMigration, error) {
 	backoff := wait.Backoff{
 		Steps:    6,
 		Duration: 10 * time.Millisecond,
@@ -147,18 +147,18 @@ func (km *KubeMigrator) updateStatus(ctx context.Context, m *migrationv1alpha1.S
 		Jitter:   0.1,
 	}
 	return m, wait.ExponentialBackoff(backoff, func() (bool, error) {
-		var newConditions []migrationv1alpha1.MigrationCondition
+		var newConditions []migrationv1beta1.MigrationCondition
 		for _, c := range m.Status.Conditions {
 			switch c.Type {
-			case migrationv1alpha1.MigrationRunning:
-			case migrationv1alpha1.MigrationSucceeded:
-			case migrationv1alpha1.MigrationFailed:
+			case migrationv1beta1.MigrationRunning:
+			case migrationv1beta1.MigrationSucceeded:
+			case migrationv1beta1.MigrationFailed:
 			default:
 				// keeps unknown conditions
 				newConditions = append(newConditions, c)
 			}
 		}
-		newCondition := migrationv1alpha1.MigrationCondition{
+		newCondition := migrationv1beta1.MigrationCondition{
 			Type:           condition,
 			Status:         corev1.ConditionTrue,
 			LastUpdateTime: metav1.Now(),
@@ -167,12 +167,12 @@ func (km *KubeMigrator) updateStatus(ctx context.Context, m *migrationv1alpha1.S
 		newConditions = append(newConditions, newCondition)
 		m.Status.Conditions = newConditions
 
-		_, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations().UpdateStatus(ctx, m, metav1.UpdateOptions{})
+		_, err := km.migrationClient.MigrationV1beta1().StorageVersionMigrations().UpdateStatus(ctx, m, metav1.UpdateOptions{})
 		if err == nil {
 			return true, nil
 		}
 		// Always refresh and retry, no matter what kind of error is returned by the apiserver.
-		updated, err := km.migrationClient.MigrationV1alpha1().StorageVersionMigrations().Get(ctx, m.Name, metav1.GetOptions{})
+		updated, err := km.migrationClient.MigrationV1beta1().StorageVersionMigrations().Get(ctx, m.Name, metav1.GetOptions{})
 		if err == nil {
 			m = updated
 		}
