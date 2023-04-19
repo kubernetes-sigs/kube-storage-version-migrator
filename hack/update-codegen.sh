@@ -19,7 +19,7 @@ set -o nounset
 set -o pipefail
 
 THIS_REPO="sigs.k8s.io/kube-storage-version-migrator"
-API_PKG="${THIS_REPO}/pkg/apis/migration/v1alpha1"
+API_PKG="${THIS_REPO}/pkg/apis/migration/v1alpha1,${THIS_REPO}/pkg/apis/migration/v1beta1"
 # Absolute path to this repo
 THIS_REPO_ABSOLUTE="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd -P)"
 
@@ -44,7 +44,7 @@ go run -mod=vendor ./vendor/k8s.io/code-generator/cmd/client-gen \
   --output-package "${THIS_REPO}/pkg/clients" \
   --clientset-name="clientset" \
   --input-base="${THIS_REPO}" \
-  --input="pkg/apis/migration/v1alpha1" \
+  --input="pkg/apis/migration/v1alpha1,pkg/apis/migration/v1beta1" \
   --go-header-file "${THIS_REPO_ABSOLUTE}/hack/boilerplate/boilerplate.generatego.txt"
 
 go run -mod=vendor ./vendor/k8s.io/code-generator/cmd/lister-gen \

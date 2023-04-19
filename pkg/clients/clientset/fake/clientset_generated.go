@@ -27,6 +27,8 @@ import (
 	clientset "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
 	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1"
 	fakemigrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1/fake"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1beta1"
+	fakemigrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1beta1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -79,4 +81,9 @@ var _ clientset.Interface = &Clientset{}
 // MigrationV1alpha1 retrieves the MigrationV1alpha1Client
 func (c *Clientset) MigrationV1alpha1() migrationv1alpha1.MigrationV1alpha1Interface {
 	return &fakemigrationv1alpha1.FakeMigrationV1alpha1{Fake: &c.Fake}
+}
+
+// MigrationV1beta1 retrieves the MigrationV1beta1Client
+func (c *Clientset) MigrationV1beta1() migrationv1beta1.MigrationV1beta1Interface {
+	return &fakemigrationv1beta1.FakeMigrationV1beta1{Fake: &c.Fake}
 }

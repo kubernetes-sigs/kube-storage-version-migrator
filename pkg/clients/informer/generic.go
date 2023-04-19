@@ -24,6 +24,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1alpha1"
+	v1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/apis/migration/v1beta1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -57,6 +58,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Migration().V1alpha1().StorageStates().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("storageversionmigrations"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Migration().V1alpha1().StorageVersionMigrations().Informer()}, nil
+
+		// Group=migration.k8s.io, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("storagestates"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Migration().V1beta1().StorageStates().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("storageversionmigrations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Migration().V1beta1().StorageVersionMigrations().Informer()}, nil
 
 	}
 

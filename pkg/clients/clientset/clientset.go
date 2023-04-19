@@ -25,11 +25,13 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	migrationv1alpha1 "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1alpha1"
+	migrationv1beta1 "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset/typed/migration/v1beta1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	MigrationV1alpha1() migrationv1alpha1.MigrationV1alpha1Interface
+	MigrationV1beta1() migrationv1beta1.MigrationV1beta1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -37,11 +39,17 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	migrationV1alpha1 *migrationv1alpha1.MigrationV1alpha1Client
+	migrationV1beta1  *migrationv1beta1.MigrationV1beta1Client
 }
 
 // MigrationV1alpha1 retrieves the MigrationV1alpha1Client
 func (c *Clientset) MigrationV1alpha1() migrationv1alpha1.MigrationV1alpha1Interface {
 	return c.migrationV1alpha1
+}
+
+// MigrationV1beta1 retrieves the MigrationV1beta1Client
+func (c *Clientset) MigrationV1beta1() migrationv1beta1.MigrationV1beta1Interface {
+	return c.migrationV1beta1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -69,6 +77,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.migrationV1beta1, err = migrationv1beta1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -82,6 +94,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.migrationV1alpha1 = migrationv1alpha1.NewForConfigOrDie(c)
+	cs.migrationV1beta1 = migrationv1beta1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -91,6 +104,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.migrationV1alpha1 = migrationv1alpha1.New(c)
+	cs.migrationV1beta1 = migrationv1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs
