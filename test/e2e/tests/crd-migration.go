@@ -112,7 +112,7 @@ var _ = Describe("storage version migrator", func() {
 		}
 
 		By("Change the storage version of the CRD")
-		output, err := exec.Command("kubectl", "patch", "crd", "tests.migrationtest.k8s.io", "--type=json", `--patch='[{ "op": "replace", "path": "/spec/versions/0/storage", "value": false}, { "op": "replace", "path": "/spec/versions/1/storage", "value": true }]'`).CombinedOutput()
+        output, err := exec.Command("kubectl", "patch", "crd", "tests.migrationtest.k8s.io", "--type=json", `--patch=[{ "op": "replace", "path": "/spec/versions/0/storage", "value": false}, { "op": "replace", "path": "/spec/versions/1/storage", "value": true }]`).CombinedOutput()
 		if err != nil {
 			util.Failf("%s", output)
 		}
