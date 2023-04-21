@@ -60,7 +60,7 @@ func Run(ctx context.Context) error {
 		crd.ApiextensionsV1().CustomResourceDefinitions(),
 		apiservice.ApiregistrationV1().APIServices(),
 		clientset.CoreV1().Namespaces(),
-		migration.MigrationV1alpha1(),
+		migration.MigrationV1beta1(),
 	)
 	return init.Initialize(ctx)
 }
