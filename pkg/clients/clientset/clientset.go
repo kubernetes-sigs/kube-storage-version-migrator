@@ -74,6 +74,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	// StorageVersionHash is removed in the new Aggregated Discovery, we need to use legacy to get them back.
+	// This is required for the Trigger controller to create StorageVersionMigration resources.
+	// https://github.com/kubernetes/enhancements/tree/master/keps/sig-api-machinery/3352-aggregated-discovery#is-the-rollout-accompanied-by-any-deprecations-andor-removals-of-features-apis-fields-of-api-types-flags-etc
+	cs.DiscoveryClient.UseLegacyDiscovery = true
 	return &cs, nil
 }
 
