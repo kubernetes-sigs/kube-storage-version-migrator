@@ -18,7 +18,7 @@ limitations under the License.
 
 package chaosmonkey
 
-import . "github.com/onsi/ginkgo"
+import . "github.com/onsi/ginkgo/v2"
 
 // Disruption is the type to construct a chaosmonkey with; see Do for more information.
 type Disruption func()

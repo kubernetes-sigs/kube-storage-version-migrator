@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"time"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -112,7 +112,7 @@ var _ = Describe("storage version migrator", func() {
 		}
 
 		By("Change the storage version of the CRD")
-		output, err := exec.Command("kubectl", "patch", "crd", "tests.migrationtest.k8s.io", `--patch={"spec":{"versions":[{"name":"v1","served":true,"storage":false},{"name":"v2","served":true,"storage":true}]}}`).CombinedOutput()
+        output, err := exec.Command("kubectl", "patch", "crd", "tests.migrationtest.k8s.io", "--type=json", `--patch=[{ "op": "replace", "path": "/spec/versions/0/storage", "value": false}, { "op": "replace", "path": "/spec/versions/1/storage", "value": true }]`).CombinedOutput()
 		if err != nil {
 			util.Failf("%s", output)
 		}

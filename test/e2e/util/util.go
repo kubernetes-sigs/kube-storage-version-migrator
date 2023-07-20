@@ -22,8 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	"sigs.k8s.io/kube-storage-version-migrator/test/e2e/util/ginkgowrapper"
+	. "github.com/onsi/ginkgo/v2"
 )
 
 func nowStamp() string {
@@ -47,5 +46,5 @@ func Failf(format string, args ...interface{}) {
 func FailfWithOffset(offset int, format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	log("INFO", msg)
-	ginkgowrapper.Fail(nowStamp()+": "+msg, 1+offset)
+	Fail(nowStamp()+": "+msg, 1+offset)
 }
