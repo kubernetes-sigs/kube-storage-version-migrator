@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: storageversionmigrations.migration.k8s.io
   annotations:
-    "api-approved.kubernetes.io": "https://github.com/kubernetes/community/pull/2524"
+    "api-approved.kubernetes.io": "unapproved, test only"
 spec:
   group: migration.k8s.io
   names:
