@@ -102,7 +102,7 @@ func toUnstructuredListOrDie(l interface{}) *unstructured.UnstructuredList {
 func TestMigrateList(t *testing.T) {
 	metrics.Metrics.Reset()
 	podList := newPodList(100)
-	client := fake.NewSimpleDynamicClient(scheme.Scheme, &podList)
+	client := fake.NewSimpleDynamicClientWithCustomListKinds(scheme.Scheme, nil, &podList)
 
 	// injects errors.
 	pod51FirstTry := true
@@ -204,7 +204,7 @@ func TestMigrateList(t *testing.T) {
 func TestMigrateListClusterScoped(t *testing.T) {
 	metrics.Metrics.Reset()
 	nodeList := newNodeList(100)
-	client := fake.NewSimpleDynamicClient(scheme.Scheme, &nodeList)
+	client := fake.NewSimpleDynamicClientWithCustomListKinds(scheme.Scheme, nil, &nodeList)
 
 	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("nodes"), client, &progressTracker{})
 	err := migrator.migrateList(toUnstructuredListOrDie(nodeList))
@@ -255,7 +255,7 @@ func TestMetrics(t *testing.T) {
 	metrics.Metrics.Reset()
 	// fake client doesn't support pagination, so we can't test complex behavior.
 	nodeList := newNodeList(100)
-	client := fake.NewSimpleDynamicClient(scheme.Scheme, &nodeList)
+	client := fake.NewSimpleDynamicClientWithCustomListKinds(scheme.Scheme, nil, &nodeList)
 	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("nodes"), client, &fakeProgress{})
 	ctx := context.TODO()
 	migrator.Run(ctx)

@@ -11,8 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+FROM golang:1.20.6 as builder
+WORKDIR /go/src/sigs.k8s.io/kube-storage-version-migrator
+COPY . .
+ARG VERSION=v0.1.0-dev
+RUN CGO_ENABLED=0 go build -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$VERSION" -a -installsuffix cgo ./cmd/trigger
 
 FROM gcr.io/distroless/static:latest
-
-ADD trigger /trigger
-ENTRYPOINT ["/trigger", "--alsologtostderr", "--v=2"]
+COPY --from=builder /go/src/sigs.k8s.io/kube-storage-version-migrator/trigger /trigger
+ENTRYPOINT ["/trigger", "--v=2"]

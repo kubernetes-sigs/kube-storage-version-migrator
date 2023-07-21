@@ -17,10 +17,11 @@ STAGING_REGISTRY := gcr.io/k8s-staging-storage-migrator
 VERSION ?= v0.1
 NAMESPACE ?= kube-system
 DELETE ?= "gcloud container images delete"
+COMPONENTS = initializer migrator trigger
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -mod=vendor ./pkg/...
+	go test ./pkg/...
 
 .PHONY: all
 all:
@@ -30,21 +31,14 @@ else
 	go install sigs.k8s.io/kube-storage-version-migrator/$(WHAT)
 endif
 
-.PHONY: all-containers
-all-containers:
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/initializer/initializer ./cmd/initializer
-	docker build --no-cache -t $(REGISTRY)/storage-version-migration-initializer:$(VERSION) cmd/initializer
-	rm cmd/initializer/initializer
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/migrator/migrator ./cmd/migrator
-	docker build --no-cache -t $(REGISTRY)/storage-version-migration-migrator:$(VERSION) cmd/migrator
-	rm cmd/migrator/migrator
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=$(VERSION)" -a -installsuffix cgo -o cmd/trigger/trigger ./cmd/trigger
-	docker build --no-cache -t $(REGISTRY)/storage-version-migration-trigger:$(VERSION) cmd/trigger
-	rm cmd/trigger/trigger
+.PHONY: all-images
+all-images: $(COMPONENTS:%=image-%)
+image-%:
+	docker build --no-cache -t $(REGISTRY)/storage-version-migration-$*:$(VERSION) --file cmd/$*/Dockerfile .
 
 .PHONY: e2e-test
 e2e-test:
-	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go test -mod=vendor -c -o ./test/e2e/e2e.test ./test/e2e
+	CGO_ENABLED=0 GOOS=linux GO111MODULE=on go test -c -o ./test/e2e/e2e.test ./test/e2e
 
 .PHONY: local-manifests
 local-manifests:
@@ -54,28 +48,27 @@ local-manifests:
 	find ./manifests.local -type f -exec sed -i -e "s|VERSION|$(VERSION)|g" {} \;
 	find ./manifests.local -type f -exec sed -i -e "s|NAMESPACE|$(NAMESPACE)|g" {} \;
 
-.PHONY: all-containers
-push-all: all-containers
-	docker push $(REGISTRY)/storage-version-migration-initializer:$(VERSION)
-	docker push $(REGISTRY)/storage-version-migration-migrator:$(VERSION)
-	docker push $(REGISTRY)/storage-version-migration-trigger:$(VERSION)
+.PHONY: push-all
+push-all: $(COMPONENTS:%=push-%)
+push-%: image-%
+	docker push $(REGISTRY)/storage-version-migration-$*:$(VERSION)
 
 .PHONY: release-staging release-alias-tag
 release-staging: ## Builds and push container images to the staging bucket.
 	REGISTRY=$(STAGING_REGISTRY) $(MAKE) push-all release-alias-tag
 
 .PHONY: release-alias-tag
-release-alias-tag: # Adds the tag to the last build tag. BASE_REF comes from the cloudbuild.yaml
-	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-initializer:$(VERSION) $(REGISTRY)/storage-version-migration-initializer:$(BASE_REF)
-	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-migrator:$(VERSION) $(REGISTRY)/storage-version-migration-migrator:$(BASE_REF)
-	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-trigger:$(VERSION) $(REGISTRY)/storage-version-migration-trigger:$(BASE_REF)
+release-alias-tag: $(COMPONENTS:%=release-alias-tag-%)
+release-alias-tag-%: # Adds the tag to the last build tag. BASE_REF comes from the cloudbuild.yaml
+	gcloud container images add-tag --quiet $(REGISTRY)/storage-version-migration-$*:$(VERSION) $(REGISTRY)/storage-version-migration-$*:$(BASE_REF)
 
 .PHONY: delete-all-images
-delete-all-images:
-	eval "$(DELETE) $(REGISTRY)/storage-version-migration-initializer:$(VERSION)"
-	eval "$(DELETE) $(REGISTRY)/storage-version-migration-migrator:$(VERSION)"
-	eval "$(DELETE) $(REGISTRY)/storage-version-migration-trigger:$(VERSION)"
+delete-all-images: $(COMPONENTS:%=delete-image-%)
+delete-image-%:
+	eval "$(DELETE) $(REGISTRY)/storage-version-migration-$*:$(VERSION)"
 
 .PHONY: clean
 clean:
-	rm  -r ./manifests.local
+	$(RM) -r _output
+	$(RM) -r manifests.local
+	$(RM) test/e2e/e2e.test

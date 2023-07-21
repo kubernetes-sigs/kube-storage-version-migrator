@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/pflag"
+
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/component-base/cli/flag"
 	migrationclient "sigs.k8s.io/kube-storage-version-migrator/pkg/clients/clientset"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/controller"
 	"sigs.k8s.io/kube-storage-version-migrator/pkg/version"
@@ -23,25 +24,25 @@ const (
 )
 
 var (
-	kubeconfigPath = flag.String("kubeconfig", "", "absolute path to the kubeconfig file specifying the apiserver instance. If unspecified, fallback to in-cluster configuration")
-	kubeAPIQPS     = flag.Float32("kube-api-qps", rest.DefaultQPS, "QPS to use while talking with kubernetes apiserver.")
-	kubeAPIBurst   = flag.Int("kube-api-burst", rest.DefaultBurst, "Burst to use while talking with kubernetes apiserver.")
+	kubeconfigPath = pflag.String("kubeconfig", "", "absolute path to the kubeconfig file specifying the apiserver instance. If unspecified, fallback to in-cluster configuration")
+	kubeAPIQPS     = pflag.Float32("kube-api-qps", rest.DefaultQPS, "QPS to use while talking with kubernetes apiserver.")
+	kubeAPIBurst   = pflag.Int("kube-api-burst", rest.DefaultBurst, "Burst to use while talking with kubernetes apiserver.")
 )
 
-func NewMigratorCommand() *cobra.Command {
-	return &cobra.Command{
+func NewMigratorCommand(ctx context.Context) *cobra.Command {
+	c := &cobra.Command{
 		Use:  "kube-storage-migrator",
 		Long: `The Kubernetes storage migrator migrates resources based on the StorageVersionMigrations APIs.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if err := Run(context.TODO()); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			flag.PrintFlags(cmd.Flags())
+			return run(cmd.Context())
 		},
 	}
+	c.SetContext(ctx)
+	return c
 }
 
-func Run(ctx context.Context) error {
+func run(ctx context.Context) error {
 	http.Handle("/metrics", promhttp.Handler())
 	livenessHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "ok")
