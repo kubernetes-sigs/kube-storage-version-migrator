@@ -1,0 +1,22 @@
+version: 2
+updates:
+- package-ecosystem: docker
+  directory: /cmd/trigger
+  schedule:
+    interval: weekly
+- package-ecosystem: docker
+  directory: /cmd/migrator
+  schedule:
+    interval: weekly
+- package-ecosystem: docker
+  directory: /vendor/golang.org/x/net/http2
+  schedule:
+    interval: weekly
+- package-ecosystem: docker
+  directory: /cmd/initializer
+  schedule:
+    interval: weekly
+- package-ecosystem: gomod
+  directory: /
+  schedule:
+    interval: weekly
