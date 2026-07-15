@@ -205,8 +205,28 @@ func (m *migrator) migrateOneItem(ctx context.Context, item *unstructured.Unstru
 	getBeforePut := false
 	for {
 		getBeforePut, err = m.try(ctx, namespace, name, item, getBeforePut)
-		if err == nil || errors.IsNotFound(err) {
+		if err == nil {
 			return nil
+		}
+		// NotFound from Update can mean two things:
+		//  (a) the object was deleted between List and Update — safe to skip.
+		//  (b) the object still exists in etcd but its Namespace has been
+		//      fully deleted — the NamespaceLifecycle admission plugin
+		//      rejects mutations in non-existent namespaces with NotFound,
+		//      even though the object is still in storage.
+		// A GET bypasses admission and reads directly from storage,
+		// distinguishing (a) from (b).
+		if errors.IsNotFound(err) {
+			_, getErr := m.get(ctx, namespace, name)
+			if errors.IsNotFound(getErr) {
+				return nil
+			}
+			if getErr != nil {
+				return fmt.Errorf("failed to verify existence of %s/%s after update returned NotFound: %v",
+					namespace, name, getErr)
+			}
+			return fmt.Errorf("cannot migrate %s/%s: object exists in storage but namespace %q "+
+				"has been deleted", namespace, name, namespace)
 		}
 		if canRetry(err) {
 			seconds, delay := errors.SuggestsClientDelay(err)
