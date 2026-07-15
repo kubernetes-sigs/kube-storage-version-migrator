@@ -156,6 +156,17 @@ func TestMigrateList(t *testing.T) {
 		return false, nil, nil
 	})
 
+	client.Fake.PrependReactor("get", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		ga, ok := a.(clitesting.GetAction)
+		if !ok {
+			t.Fatalf("expected GetAction")
+		}
+		if ga.GetName() == "pod53" {
+			return true, nil, errors.NewNotFound(v1.Resource("pods"), "pod53")
+		}
+		return false, nil, nil
+	})
+
 	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client, &progressTracker{})
 	migratorError := migrator.migrateList(toUnstructuredListOrDie(podList))
 
@@ -166,21 +177,25 @@ func TestMigrateList(t *testing.T) {
 	for _, a := range actions {
 		namespace, verb := a.GetNamespace(), a.GetVerb()
 		var name string
-		if verb != "update" {
+		switch verb {
+		case "update":
+			ua, ok := a.(clitesting.UpdateAction)
+			if !ok {
+				t.Fatalf("expected UpdateAction")
+			}
+			obj := ua.GetObject()
+			var err error
+			name, err = metadataAccessor.Name(obj)
+			if err != nil {
+				t.Fatal(err)
+			}
+			nsSet.Insert(namespace)
+			podSet.Insert(name)
+		case "get":
+			// GET requests are expected after NotFound on Update (orphan probe)
+		default:
 			t.Errorf("unexpected %q request %v", verb, a)
 		}
-		ua, ok := a.(clitesting.UpdateAction)
-		if !ok {
-			t.Fatalf("expected UpdateAction")
-		}
-		obj := ua.GetObject()
-		var err error
-		name, err = metadataAccessor.Name(obj)
-		if err != nil {
-			t.Fatal(err)
-		}
-		nsSet.Insert(namespace)
-		podSet.Insert(name)
 	}
 	for i := 0; i < 100; i++ {
 		if !nsSet.Has(fmt.Sprintf("namespace%d", i)) {
