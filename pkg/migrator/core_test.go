@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -156,6 +157,17 @@ func TestMigrateList(t *testing.T) {
 		return false, nil, nil
 	})
 
+	client.Fake.PrependReactor("get", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		ga, ok := a.(clitesting.GetAction)
+		if !ok {
+			t.Fatalf("expected GetAction")
+		}
+		if ga.GetName() == "pod53" {
+			return true, nil, errors.NewNotFound(v1.Resource("pods"), "pod53")
+		}
+		return false, nil, nil
+	})
+
 	migrator := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client, &progressTracker{})
 	migratorError := migrator.migrateList(toUnstructuredListOrDie(podList))
 
@@ -166,21 +178,25 @@ func TestMigrateList(t *testing.T) {
 	for _, a := range actions {
 		namespace, verb := a.GetNamespace(), a.GetVerb()
 		var name string
-		if verb != "update" {
+		switch verb {
+		case "update":
+			ua, ok := a.(clitesting.UpdateAction)
+			if !ok {
+				t.Fatalf("expected UpdateAction")
+			}
+			obj := ua.GetObject()
+			var err error
+			name, err = metadataAccessor.Name(obj)
+			if err != nil {
+				t.Fatal(err)
+			}
+			nsSet.Insert(namespace)
+			podSet.Insert(name)
+		case "get":
+			// GET requests are expected after NotFound on Update (orphan probe)
+		default:
 			t.Errorf("unexpected %q request %v", verb, a)
 		}
-		ua, ok := a.(clitesting.UpdateAction)
-		if !ok {
-			t.Fatalf("expected UpdateAction")
-		}
-		obj := ua.GetObject()
-		var err error
-		name, err = metadataAccessor.Name(obj)
-		if err != nil {
-			t.Fatal(err)
-		}
-		nsSet.Insert(namespace)
-		podSet.Insert(name)
 	}
 	for i := 0; i < 100; i++ {
 		if !nsSet.Has(fmt.Sprintf("namespace%d", i)) {
@@ -311,5 +327,66 @@ func expectCounterCount(t *testing.T, name string, labelFilter map[string]string
 				}
 			}
 		}
+	}
+}
+
+func TestMigrateOneItem_NotFoundThenGetNotFound(t *testing.T) {
+	podList := newPodList(1)
+	client := fake.NewSimpleDynamicClientWithCustomListKinds(scheme.Scheme, nil, &podList)
+
+	client.Fake.PrependReactor("update", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		return true, nil, errors.NewNotFound(v1.Resource("pods"), "pod0")
+	})
+	client.Fake.PrependReactor("get", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		return true, nil, errors.NewNotFound(v1.Resource("pods"), "pod0")
+	})
+
+	m := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client, &progressTracker{})
+	items := toUnstructuredListOrDie(podList)
+	err := m.migrateOneItem(context.Background(), &items.Items[0])
+	if err != nil {
+		t.Errorf("expected nil error for genuinely deleted object, got: %v", err)
+	}
+}
+
+func TestMigrateOneItem_NotFoundThenGetSucceeds(t *testing.T) {
+	podList := newPodList(1)
+	client := fake.NewSimpleDynamicClientWithCustomListKinds(scheme.Scheme, nil, &podList)
+
+	client.Fake.PrependReactor("update", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		return true, nil, errors.NewNotFound(v1.Resource("pods"), "pod0")
+	})
+	// default GET returns the object (it exists in the fake client)
+
+	m := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client, &progressTracker{})
+	items := toUnstructuredListOrDie(podList)
+	err := m.migrateOneItem(context.Background(), &items.Items[0])
+	if err == nil {
+		t.Fatal("expected error for orphaned namespace object, got nil")
+	}
+	if !strings.Contains(err.Error(), "object exists in storage but namespace") {
+		t.Errorf("expected orphaned namespace error message, got: %v", err)
+	}
+}
+
+func TestMigrateOneItem_NotFoundThenGetError(t *testing.T) {
+	podList := newPodList(1)
+	client := fake.NewSimpleDynamicClientWithCustomListKinds(scheme.Scheme, nil, &podList)
+
+	client.Fake.PrependReactor("update", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		return true, nil, errors.NewNotFound(v1.Resource("pods"), "pod0")
+	})
+	client.Fake.PrependReactor("get", "pods", func(a clitesting.Action) (bool, runtime.Object, error) {
+		return true, nil, fmt.Errorf("connection refused")
+	})
+
+	m := NewMigrator(v1.SchemeGroupVersion.WithResource("pods"), client, &progressTracker{})
+	items := toUnstructuredListOrDie(podList)
+	err := m.migrateOneItem(context.Background(), &items.Items[0])
+	if err == nil {
+		t.Fatal("expected error when GET fails, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to verify existence") {
+		t.Errorf("expected verification error message, got: %v", err)
 	}
 }
